@@ -1,0 +1,12 @@
+{
+  "name": "forj-core-screens-prototype",
+  "private": true,
+  "description": "PROTOTYPE: throwaway core screen flow mockup (sunwjy/forj#9). Not production code.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5174 --open"
+  },
+  "devDependencies": {
+    "vite": "5.4.10"
+  }
+}

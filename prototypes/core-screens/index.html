@@ -1,0 +1,27 @@
+<!doctype html>
+<!--
+  PROTOTYPE — throwaway. (sunwjy/forj#9 핵심 화면 구성 프로토타입)
+  Question: "여행 생성부터 일정 항목 편집까지의 화면은 어떻게 구성하나?"
+  Three structurally different flows, switchable via ?variant=A|B|C:
+    A 시트형 · B 페이지형 · C 인라인형
+  Visual style follows docs/design/visual-design.md (fixed, not under test). Data is in-memory only.
+-->
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>forj 화면 구성 시안</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="stage">
+    <div class="phone" id="phone"></div>
+    <aside class="notes" id="notes"></aside>
+  </main>
+  <div class="proto-bar" id="proto-bar"></div>
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
