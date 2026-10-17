@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { use } from "react";
+import { use, useEffect } from "react";
+import { recordTripLookup } from "@/lib/recent-trips";
 import { localDate } from "@/lib/trip/format";
 import { useTrip } from "@/lib/trip/use-trip";
+import { getRecentTrips } from "@/lib/use-recent-trips";
 import { TripNotFound } from "./TripNotFound";
 import { TripView } from "./TripView";
 import styles from "./trip.module.css";
@@ -12,6 +14,9 @@ import styles from "./trip.module.css";
 export function TripScreen({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
   const { state, reload } = useTrip(token);
+
+  // Every lookup result updates this browser's recent trips (spec 7.2).
+  useEffect(() => recordTripLookup(getRecentTrips(), token, state), [token, state]);
 
   if (state.status === "not_found") return <TripNotFound />;
 
