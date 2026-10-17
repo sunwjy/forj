@@ -140,8 +140,8 @@ select is(
   (public.get_trip('itemTestTripToken00000')->'items'->0) - 'created_at',
   jsonb_build_object(
     'id', '20000000-0000-4000-8000-000000000101', 'date', '2026-11-20', 'title', '돈코츠 라멘',
-    'memo', '줄 서기', 'start_time', '12:00', 'end_time', '13:30', 'emoji', '🍜'),
-  'patched values are normalized and fields without a key are kept');
+    'memo', '  줄 서기  ', 'start_time', '12:00', 'end_time', '13:30', 'emoji', '🍜'),
+  'the title is trimmed, the memo is kept as written and fields without a key are kept');
 
 select lives_ok(
   $$select public.update_item('itemTestTripToken00000', '20000000-0000-4000-8000-000000000101',

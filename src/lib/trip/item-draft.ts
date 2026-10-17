@@ -88,7 +88,8 @@ export function validateItemDraft(draft: ItemDraft): ItemDraftResult {
     return { ok: false, field: "time", message: "종료 시각만 둘 수는 없어요. 시작 시각을 먼저 골라 주세요." };
   }
 
-  const memo = draft.memo.trim();
+  // A memo is stored as written; only a blank one becomes null (spec 5.4).
+  const memo = draft.memo.trim() === "" ? "" : draft.memo;
   if (codePoints(memo) > MAX_MEMO_LENGTH) {
     return { ok: false, field: "memo", message: `메모는 ${MAX_MEMO_LENGTH.toLocaleString("ko-KR")}자까지 쓸 수 있어요.` };
   }

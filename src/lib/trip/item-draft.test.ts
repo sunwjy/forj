@@ -53,7 +53,7 @@ const draft: ItemDraft = {
 };
 
 describe("validateItemDraft", () => {
-  it("normalizes the input into item fields", () => {
+  it("trims the title, keeps a memo as written and nulls a blank one", () => {
     expect(validateItemDraft({ ...draft, memo: "  \n " })).toEqual({
       ok: true,
       fields: { date: "2026-11-20", title: "라멘", memo: null, start_time: null, end_time: null, emoji: null },
@@ -65,7 +65,7 @@ describe("validateItemDraft", () => {
       fields: {
         date: "2026-11-20",
         title: "라멘",
-        memo: "2터미널\n짐 맡기기",
+        memo: " 2터미널\n짐 맡기기 ",
         start_time: "09:00",
         end_time: "10:30",
         emoji: "✈️",
