@@ -314,7 +314,7 @@
 - **Vercel**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 두 개만 대시보드에 직접 등록합니다. Vercel Marketplace의 Supabase 연동은 쓰지 않습니다.
 - **로컬**: `.env.example`을 commit하고, 실제 값은 `.env.local`에 둡니다.
 - **GitHub secret**: DB 비밀번호, Vercel Deploy Hook URL, Supabase Storage S3 access key, 백업 passphrase.
-- **GitHub variable**: Supabase project ref, pooler host. secret이 아닌 접속 정보입니다.
+- **GitHub variable**: Supabase project ref, pooler host, publishable key(keepalive용). secret이 아닌 접속 정보입니다.
 - secret key(service role)는 어디에도 두지 않습니다.
 - Supabase access token은 두지 않습니다. CI는 `supabase link`를 실행하지 않고, `db push`와 `db dump`에 pooler 주소와 DB 비밀번호로 조합한 `--db-url`을 넘깁니다. `link`에는 secret key를 조회하는 권한이 필요하기 때문입니다.
 
@@ -323,8 +323,9 @@
 하나의 scheduled workflow가 매일 한 번 다음 작업을 차례로 실행합니다.
 
 1. **keepalive**: publishable key로 존재하지 않는 고정 토큰을 넣어 `get_trip`을 호출합니다. 결과는 `TRIP_NOT_FOUND`이지만 DB 활동으로 집계되어 무료 플랜의 일시 정지를 막습니다.
-2. **백업**: `supabase db dump`(스키마)와 `supabase db dump --data-only`(데이터)를 `gpg --symmetric`으로 암호화해 같은 프로젝트의 비공개 Storage bucket에 올리고, 30일보다 오래된 백업을 삭제합니다.
+2. **백업**: `supabase db dump`(스키마)와 `supabase db dump --data-only --schema private`(데이터)를 `gpg --symmetric`으로 암호화해 같은 프로젝트의 비공개 Storage bucket에 올리고, 30일보다 오래된 백업을 삭제합니다.
 
+- 데이터 dump는 앱 데이터가 있는 `private` 스키마만 담습니다. `auth`·`storage` 행(백업 bucket의 object 포함)은 제외합니다.
 - dump에는 모든 공유 토큰이 들어 있으므로 Actions artifact나 로그에 절대 남기지 않습니다.
 - 이 백업은 논리적 유실에만 대비합니다. 프로젝트 자체가 사라지면 백업도 함께 사라집니다.
 - 복구 절차는 [runbook](runbook.md)에 있습니다.
