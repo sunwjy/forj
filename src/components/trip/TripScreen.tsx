@@ -11,13 +11,13 @@ import styles from "./trip.module.css";
 /** `/t/<token>`: loads the trip and picks the screen for its state. */
 export function TripScreen({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
-  const { state, reload } = useTrip(token);
+  const { state, reload, writer, stalled } = useTrip(token);
 
   if (state.status === "not_found") return <TripNotFound />;
 
   const trip = state.status === "found" || state.status === "error" ? state.trip : undefined;
   // The snapshot only arrives in the browser, so the local date is read there too.
-  if (trip) return <TripView trip={trip} today={localDate(new Date())} />;
+  if (trip) return <TripView trip={trip} today={localDate(new Date())} writer={writer} stalled={stalled} />;
 
   if (state.status === "error") {
     return (

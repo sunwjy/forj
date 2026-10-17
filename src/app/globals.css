@@ -26,6 +26,10 @@
   --accent: #FFE9A8;
   --accent-ink: #7A5C00;
 
+  /* Destructive actions and errors (from the core-screens prototype) */
+  --danger: #B3261E;
+  --danger-soft: #F6E1DF;
+
   /* Day colors: soft = surface, ink = text, border, timeline dot */
   --d1: #FFD9CC; --d1-ink: #A4482A;
   --d2: #DCD3FF; --d2-ink: #5B47B8;
