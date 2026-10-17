@@ -22,6 +22,12 @@ function rpcCall(token: string, change: TripChange): [string, Record<string, unk
       return ["update_item", { token, item_id: change.id, patch: change.patch }];
     case "delete_item":
       return ["delete_item", { token, item_id: change.id }];
+    case "update_trip_title":
+      return ["update_trip_title", { token, title: change.title }];
+    case "set_trip_dates": {
+      const { start_date, end_date, deleted_ids } = change;
+      return ["set_trip_dates", { token, start_date, end_date, confirmed_deleted_ids: deleted_ids }];
+    }
   }
 }
 

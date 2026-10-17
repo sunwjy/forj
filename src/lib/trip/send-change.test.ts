@@ -71,6 +71,29 @@ describe("sendChange", () => {
     expect(calls).toMatchObject([{ fn: "delete_item", args: { token, item_id: item.id } }]);
   });
 
+  it("changes the trip title", async () => {
+    const { client, calls } = clientAnswering(ok);
+    await sendChange(client, token, { kind: "update_trip_title", title: "후쿠오카" });
+    expect(calls).toEqual([{ fn: "update_trip_title", args: { token, title: "후쿠오카" }, signal: expect.anything() }]);
+  });
+
+  it("changes the period with the confirmed deletions", async () => {
+    const { client, calls } = clientAnswering(ok);
+    await sendChange(client, token, {
+      kind: "set_trip_dates",
+      start_date: "2026-11-20",
+      end_date: "2026-11-21",
+      deleted_ids: [item.id],
+    });
+    expect(calls).toEqual([
+      {
+        fn: "set_trip_dates",
+        args: { token, start_date: "2026-11-20", end_date: "2026-11-21", confirmed_deleted_ids: [item.id] },
+        signal: expect.anything(),
+      },
+    ]);
+  });
+
   it("reports the error code when the server rejects the change", async () => {
     const { client } = clientAnswering(() => ({
       data: null,

@@ -92,6 +92,29 @@ describe("rebase", () => {
     ]);
     expect(snapshot).toEqual(before);
   });
+
+  it("shows a new trip title", () => {
+    expect(rebase(snapshot, [{ kind: "update_trip_title", title: "후쿠오카 먹방" }])).toEqual({
+      ...snapshot,
+      title: "후쿠오카 먹방",
+    });
+  });
+
+  it("shows a new period, without the items on dates that left it", () => {
+    const lastDay = item({ id: "last", date: "2026-11-22" });
+    const view = rebase({ ...snapshot, items: [lunch, dinner, lastDay] }, [
+      { kind: "set_trip_dates", start_date: "2026-11-19", end_date: "2026-11-21", deleted_ids: ["last"] },
+    ]);
+    expect(view).toEqual({ ...snapshot, start_date: "2026-11-19", end_date: "2026-11-21", items: [lunch, dinner] });
+  });
+
+  it("replays item changes made after a period change on the new period", () => {
+    const view = rebase(snapshot, [
+      { kind: "set_trip_dates", start_date: "2026-11-21", end_date: "2026-11-22", deleted_ids: ["lunch", "dinner"] },
+      { kind: "update_item", id: "lunch", patch: { title: "되살리면 안 됨" } },
+    ]);
+    expect(view.items).toEqual([]);
+  });
 });
 
 describe("optimisticCreatedAt", () => {
