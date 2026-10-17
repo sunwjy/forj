@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { type Day, ddayLabel, initialDay, tripDays } from "@/lib/trip/days";
 import { dayChipDate, periodLabel, timeLabel } from "@/lib/trip/format";
+import { copyShareLink } from "@/lib/trip/share-link";
 import type { ItemSnapshot, TripSnapshot } from "@/lib/trip/snapshot";
 import { dayTimeline } from "@/lib/trip/timeline";
 import styles from "./trip.module.css";
@@ -38,8 +39,12 @@ export function TripView({ trip, today }: TripViewProps) {
         <div className={styles.topbarMid}>
           <span className={styles.dday}>{ddayLabel(trip.start_date, trip.end_date, today)}</span>
         </div>
-        {/* Copying the share link arrives with spec 7.5. */}
-        <button type="button" className={styles.iconButton} aria-label="공유 링크 복사" disabled>
+        <button
+          type="button"
+          className={styles.iconButton}
+          aria-label="공유 링크 복사"
+          onClick={() => copyShareLink(window.location.href, navigator.clipboard)}
+        >
           🔗
         </button>
       </div>
