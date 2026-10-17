@@ -54,6 +54,11 @@ export function TripCreateForm({ onCreated }: TripCreateFormProps) {
     onCreated?.({ ...checked.value, token: result.token });
     showToast(CREATED_TOAST);
     router.push(`/t/${result.token}`);
+    // Next.js keeps this route's state for back navigation; come back to an empty form.
+    setTitle("");
+    setStartDate("");
+    setEndDate("");
+    setPending(false);
   }
 
   const errorId = `${id}-error`;
