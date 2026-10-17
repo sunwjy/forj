@@ -3,28 +3,20 @@
  * repeats them in `create_trip`; this only gives the form early feedback.
  */
 
+import { daysBetween } from "./trip/days";
+
 export const MAX_TITLE_LENGTH = 100;
 export const MAX_PERIOD_DAYS = 30;
 
-export type TripDraft = {
-  title: string;
-  /** `YYYY-MM-DD` from a date input, or "" when not chosen. */
-  startDate: string;
-  endDate: string;
-};
+/** A trip's start and end dates, `YYYY-MM-DD`, both included. */
+export type Period = { startDate: string; endDate: string };
 
-export type TripInput = TripDraft;
+/** A trip's title and period as typed; a date is "" when not chosen. */
+export type TripDraft = { title: string } & Period;
 
 export type TripInputResult =
-  | { ok: true; value: TripInput }
+  | { ok: true; value: TripDraft }
   | { ok: false; field: "title" | "period"; message: string };
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** Days from start to end, both included. Uses UTC so local DST never shifts it. */
-function periodDays(startDate: string, endDate: string): number {
-  return (Date.parse(`${endDate}T00:00:00Z`) - Date.parse(`${startDate}T00:00:00Z`)) / DAY_MS + 1;
-}
 
 export function validateTripInput(draft: TripDraft): TripInputResult {
   const title = draft.title.trim();
@@ -40,7 +32,7 @@ export function validateTripInput(draft: TripDraft): TripInputResult {
   if (!startDate || !endDate) {
     return { ok: false, field: "period", message: "시작일과 종료일을 골라 주세요." };
   }
-  const days = periodDays(startDate, endDate);
+  const days = daysBetween(startDate, endDate) + 1;
   if (Number.isNaN(days)) {
     return { ok: false, field: "period", message: "시작일과 종료일을 골라 주세요." };
   }

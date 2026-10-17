@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
 import { createTrip } from "@/lib/create-trip";
 import { getSupabase } from "@/lib/supabase";
-import { validateTripInput, type TripInput } from "@/lib/trip-input";
+import { validateTripInput, type TripDraft } from "@/lib/trip-input";
 import { showToast } from "./toast";
 import { TripFields } from "./TripFields";
 import styles from "./TripCreateForm.module.css";
 
-export type CreatedTrip = TripInput & { token: string };
+export type CreatedTrip = TripDraft & { token: string };
 
 type TripCreateFormProps = {
   /** Runs after the trip exists and before navigating to it, e.g. to remember it as a recent trip. */

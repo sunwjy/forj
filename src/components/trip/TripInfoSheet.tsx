@@ -6,7 +6,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { showToast } from "@/components/toast";
 import { TripFields } from "@/components/TripFields";
 import formStyles from "@/components/TripCreateForm.module.css";
-import { validateTripInput, type TripDraft } from "@/lib/trip-input";
+import { validateTripInput, type Period, type TripDraft } from "@/lib/trip-input";
 import { dayChipDate } from "@/lib/trip/format";
 import { periodChange } from "@/lib/trip/period-change";
 import type { TripSnapshot } from "@/lib/trip/snapshot";
@@ -18,8 +18,6 @@ import styles from "./TripInfoSheet.module.css";
 
 const DEFAULT_EMOJI = "📍";
 const FAILED_TOAST = "저장하지 못했어요";
-
-type Period = { startDate: string; endDate: string };
 
 /** `key` changes every time the sheet opens, so the form starts fresh. */
 type SheetTarget = { key: number; draft: TripDraft };

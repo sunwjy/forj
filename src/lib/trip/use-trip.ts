@@ -7,8 +7,6 @@ import { fetchTrip } from "./fetch-trip";
 import { sendChange } from "./send-change";
 import { createTripStore, type Rejection, type TripState, type TripStore } from "./trip-store";
 
-export type { TripState } from "./trip-store";
-
 /** What the trip screen uses to write (spec 6). */
 export type TripWriter = {
   /** Shows the change at once and sends it in the background. */

@@ -1,9 +1,10 @@
-import type { TripState } from "./trip/use-trip";
+import type { Period } from "./trip-input";
+import type { TripState } from "./trip/trip-store";
 
 /** The slice of `localStorage` recent trips need. */
 export type RecentTripsStorage = Pick<Storage, "getItem" | "setItem">;
 
-export type RecentTripInput = { token: string; title: string; startDate: string; endDate: string };
+export type RecentTripInput = { token: string; title: string } & Period;
 
 /** A trip in this browser's recent trips (spec 7.2): a snapshot plus when it was last opened. */
 export type RecentTrip = RecentTripInput & {
