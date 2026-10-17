@@ -270,12 +270,23 @@
 
 /* Shown in place of the D-day while changes cannot be sent (7.7) */
 .offline {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
   font-weight: 700;
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: var(--r-full);
-  background: var(--danger-soft);
-  color: var(--danger);
+  background: var(--line);
+  color: var(--text);
+}
+
+.offline::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
 }
 
 .empty {

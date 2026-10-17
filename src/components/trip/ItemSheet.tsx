@@ -9,14 +9,17 @@ import { dayChipDate, timeLabel } from "@/lib/trip/format";
 import {
   MAX_ITEM_TITLE_LENGTH,
   MAX_MEMO_LENGTH,
+  itemFields,
   itemPatch,
   validateItemDraft,
   type ItemDraft,
   type ItemDraftField,
 } from "@/lib/trip/item-draft";
 import { addMinutes, durationMinutes, overlappingItems } from "@/lib/trip/item-time";
+import { mergeRemoteItem, type RemoteMark, type RemoteMarks } from "@/lib/trip/remote-edit";
 import type { ItemSnapshot } from "@/lib/trip/snapshot";
 import styles from "./ItemSheet.module.css";
+import { OfflineBadge } from "./OfflineBadge";
 
 /** Common travel emoji offered next to the phone's emoji keyboard (spec 7.4). */
 const SUGGESTED_EMOJI = ["✈️", "🚃", "🚌", "🏨", "🍜", "🍣", "☕️", "🍺", "📸", "🛍️", "🎢", "⛩️", "🌇"];
@@ -33,8 +36,10 @@ type ItemSheetProps = {
   /** `null` closes the sheet. */
   target: ItemSheetTarget | null;
   days: Day[];
-  /** The trip's items as shown, for the overlap notice and to notice a deletion. */
+  /** The trip's items as shown, for the overlap notice and to notice someone else's edit or deletion. */
   items: ItemSnapshot[];
+  /** Shows the connection-lost badge atop the sheet (spec 7.7). */
+  offline?: boolean;
   onClose: () => void;
   onCreate: (fields: ItemFields) => void;
   onUpdate: (id: string, patch: ItemPatch) => void;
@@ -77,15 +82,46 @@ function overlapNotice(overlaps: ItemSnapshot[]): string | null {
 
 type ItemFormProps = Omit<ItemSheetProps, "target"> & { target: ItemSheetTarget };
 
-function ItemForm({ target, days, items, onClose, onCreate, onUpdate, onDelete, onReAdd }: ItemFormProps) {
+const REMOTE_NOTES: Record<RemoteMark, string> = {
+  theirs: "방금 다른 사람이 바꿨어요",
+  mine: "다른 사람도 바꿨어요. 저장하면 내 입력으로 바뀌어요",
+};
+
+/** Butter highlight and note for a field someone else changed (spec 7.7). */
+function RemoteNote({ mark }: { mark: RemoteMark | undefined }) {
+  if (!mark) return null;
+  return <p className={styles.remoteNote}>{REMOTE_NOTES[mark]}</p>;
+}
+
+function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, onDelete, onReAdd }: ItemFormProps) {
   const id = useId();
   const [draft, setDraft] = useState(target.draft);
   const [error, setError] = useState<{ field: ItemDraftField; message: string } | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  // The item as last seen, so saving sends only my edits (spec 6.1).
+  const [base, setBase] = useState(target.mode === "edit" ? target.base : undefined);
+  const [marks, setMarks] = useState<RemoteMarks>({});
 
   const editing = target.mode === "edit";
+  const current = editing ? items.find((i) => i.id === target.id) : undefined;
   // Someone else deleted the item while the sheet was open (spec 6.5).
-  const deleted = editing && !items.some((i) => i.id === target.id);
+  const deleted = editing && !current;
+
+  // A refetch brought someone else's edit: merge it into the form (spec 7.7).
+  if (current && base) {
+    const latest = itemFields(current);
+    if (Object.keys(itemPatch(base, latest)).length > 0) {
+      const merged = mergeRemoteItem(base, draft, latest);
+      setBase(merged.base);
+      setDraft(merged.draft);
+      setMarks((m) => ({ ...m, ...merged.marks }));
+    }
+  }
+  const remote = (...fields: (keyof ItemDraft)[]): RemoteMark | undefined => {
+    const found = fields.map((f) => marks[f]).filter(Boolean);
+    return found.includes("mine") ? "mine" : found[0];
+  };
+  const fieldClass = (mark: RemoteMark | undefined) => (mark ? `${styles.field} ${styles.remote}` : styles.field);
 
   const set = <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => setDraft((d) => ({ ...d, [key]: value }));
 
@@ -106,10 +142,10 @@ function ItemForm({ target, days, items, onClose, onCreate, onUpdate, onDelete, 
       setError({ field: checked.field, message: checked.message });
       return;
     }
-    if (target.mode === "new") {
+    if (target.mode === "new" || !base) {
       onCreate(checked.fields);
     } else {
-      const patch = itemPatch(target.base, checked.fields);
+      const patch = itemPatch(base, checked.fields);
       if (Object.keys(patch).length > 0) onUpdate(target.id, patch);
     }
     onClose();
@@ -122,6 +158,11 @@ function ItemForm({ target, days, items, onClose, onCreate, onUpdate, onDelete, 
 
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
+      {offline && (
+        <p className={styles.offlineLine}>
+          <OfflineBadge />
+        </p>
+      )}
       {deleted && (
         <div className={styles.deletedBanner} role="alert">
           삭제된 일정입니다. 다른 사람이 이 일정을 지웠어요.
@@ -136,7 +177,7 @@ function ItemForm({ target, days, items, onClose, onCreate, onUpdate, onDelete, 
         </div>
       )}
 
-      <fieldset className={styles.field}>
+      <fieldset className={fieldClass(remote("emoji"))}>
         <legend>아이콘</legend>
         <div className={styles.emojis}>
           {SUGGESTED_EMOJI.map((emoji) => (
@@ -161,9 +202,10 @@ function ItemForm({ target, days, items, onClose, onCreate, onUpdate, onDelete, 
             maxLength={32}
           />
         </div>
+        <RemoteNote mark={remote("emoji")} />
       </fieldset>
 
-      <div className={styles.field}>
+      <div className={fieldClass(remote("title"))}>
         <label htmlFor={`${id}-title`}>제목</label>
         <input
           id={`${id}-title`}
@@ -177,9 +219,10 @@ function ItemForm({ target, days, items, onClose, onCreate, onUpdate, onDelete, 
           // The browser counts UTF-16 units; the code-point limit is checked on save.
           maxLength={MAX_ITEM_TITLE_LENGTH * 2}
         />
+        <RemoteNote mark={remote("title")} />
       </div>
 
-      <div className={styles.field}>
+      <div className={fieldClass(remote("date"))}>
         <label htmlFor={`${id}-date`}>일차</label>
         <select id={`${id}-date`} value={draft.date} onChange={(event) => set("date", event.target.value)}>
           {days.map((day) => (
@@ -188,9 +231,10 @@ function ItemForm({ target, days, items, onClose, onCreate, onUpdate, onDelete, 
             </option>
           ))}
         </select>
+        <RemoteNote mark={remote("date")} />
       </div>
 
-      <fieldset className={styles.field}>
+      <fieldset className={fieldClass(remote("start_time", "end_time"))}>
         <legend>
           시각 <span className={styles.legendNote}>(비워 두면 「시간 미정」)</span>
         </legend>
@@ -251,9 +295,10 @@ function ItemForm({ target, days, items, onClose, onCreate, onUpdate, onDelete, 
             {notice}
           </p>
         )}
+        <RemoteNote mark={remote("start_time", "end_time")} />
       </fieldset>
 
-      <div className={styles.field}>
+      <div className={fieldClass(remote("memo"))}>
         <label htmlFor={`${id}-memo`}>메모</label>
         <textarea
           id={`${id}-memo`}
@@ -264,6 +309,7 @@ function ItemForm({ target, days, items, onClose, onCreate, onUpdate, onDelete, 
           aria-describedby={describe("memo")}
           maxLength={MAX_MEMO_LENGTH * 2}
         />
+        <RemoteNote mark={remote("memo")} />
       </div>
 
       {error && (

@@ -13,6 +13,7 @@ import { dayTimeline } from "@/lib/trip/timeline";
 import type { Rejection } from "@/lib/trip/trip-store";
 import type { TripWriter } from "@/lib/trip/use-trip";
 import { ItemSheet, type ItemSheetTarget } from "./ItemSheet";
+import { OfflineBadge } from "./OfflineBadge";
 import styles from "./trip.module.css";
 
 const DEFAULT_EMOJI = "📍";
@@ -28,8 +29,8 @@ type TripViewProps = {
   /** `YYYY-MM-DD` in the viewer's local calendar. */
   today: string;
   writer: TripWriter;
-  /** Changes have failed to send for a while (spec 6.3, 7.7). */
-  stalled?: boolean;
+  /** The realtime channel is down or changes have failed to send for a while (spec 6.3, 7.7). */
+  offline?: boolean;
 };
 
 const OUT_OF_RANGE_TOAST = "여행 기간에서 빠진 날짜예요";
@@ -37,7 +38,7 @@ const DELETED_TOAST = "삭제된 일정이라 저장하지 못했어요";
 const FAILED_TOAST = "저장하지 못했어요";
 
 /** The trip screen body (spec 7.3): top bar, header, day chips, timeline, item sheet. */
-export function TripView({ trip, today, writer, stalled = false }: TripViewProps) {
+export function TripView({ trip, today, writer, offline = false }: TripViewProps) {
   const days = tripDays(trip.start_date, trip.end_date);
   const [picked, setPicked] = useState(() => initialDay(trip.start_date, trip.end_date, today));
   // The period can change under us (later, by someone else); fall back if the day left it.
@@ -86,10 +87,8 @@ export function TripView({ trip, today, writer, stalled = false }: TripViewProps
           ←
         </Link>
         <div className={styles.topbarMid}>
-          {stalled ? (
-            <span className={styles.offline} role="status">
-              연결 끊김 · 다시 연결하는 중
-            </span>
+          {offline ? (
+            <OfflineBadge />
           ) : (
             <span className={styles.dday}>{ddayLabel(trip.start_date, trip.end_date, today)}</span>
           )}
@@ -161,6 +160,7 @@ export function TripView({ trip, today, writer, stalled = false }: TripViewProps
         target={sheet}
         days={days}
         items={trip.items}
+        offline={offline}
         onClose={() => setSheet(null)}
         onCreate={(fields) => {
           writer.submit({
