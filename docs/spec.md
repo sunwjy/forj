@@ -313,8 +313,10 @@
 
 - **Vercel**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 두 개만 대시보드에 직접 등록합니다. Vercel Marketplace의 Supabase 연동은 쓰지 않습니다.
 - **로컬**: `.env.example`을 commit하고, 실제 값은 `.env.local`에 둡니다.
-- **GitHub secret**: Supabase access token, DB 비밀번호, Vercel Deploy Hook URL, Supabase Storage S3 access key, 백업 passphrase.
+- **GitHub secret**: DB 비밀번호, Vercel Deploy Hook URL, Supabase Storage S3 access key, 백업 passphrase.
+- **GitHub variable**: Supabase project ref, pooler host. secret이 아닌 접속 정보입니다.
 - secret key(service role)는 어디에도 두지 않습니다.
+- Supabase access token은 두지 않습니다. CI는 `supabase link`를 실행하지 않고, `db push`와 `db dump`에 pooler 주소와 DB 비밀번호로 조합한 `--db-url`을 넘깁니다. `link`에는 secret key를 조회하는 권한이 필요하기 때문입니다.
 
 ### 9.6 daily workflow
 
