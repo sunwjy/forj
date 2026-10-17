@@ -26,7 +26,7 @@ function draftOf(trip: TripSnapshot): TripDraft {
   return { title: trip.title, startDate: trip.start_date, endDate: trip.end_date };
 }
 
-type TripInfoEditorProps = {
+type TripInfoSheetProps = {
   /** The rebased view: server snapshot plus pending changes. */
   trip: TripSnapshot;
   writer: TripWriter;
@@ -41,7 +41,7 @@ type TripInfoEditorProps = {
  * the confirmation when shrinking the period deletes items, and the handling
  * of rejected trip changes (spec 6.5).
  */
-export function TripInfoEditor({ trip, writer, openRequest, offline = false }: TripInfoEditorProps) {
+export function TripInfoSheet({ trip, writer, openRequest, offline = false }: TripInfoSheetProps) {
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
   // Re-asked after DELETION_MISMATCH, with the sheet already closed.
   const [retry, setRetry] = useState<Period | null>(null);

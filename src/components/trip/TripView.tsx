@@ -13,7 +13,7 @@ import { dayTimeline } from "@/lib/trip/timeline";
 import { useRejections, type TripWriter } from "@/lib/trip/use-trip";
 import { ItemSheet, type ItemSheetTarget } from "./ItemSheet";
 import { OfflineBadge } from "./OfflineBadge";
-import { TripInfoEditor } from "./TripInfoSheet";
+import { TripInfoSheet } from "./TripInfoSheet";
 import styles from "./trip.module.css";
 
 const DEFAULT_EMOJI = "📍";
@@ -64,7 +64,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
   // The store has already reverted a rejected change; say so and offer the input back (spec 6.5).
   useRejections(writer, ({ change, code, item }) => {
     const id = changedItemId(change);
-    // Trip changes are handled by TripInfoEditor.
+    // Trip changes are handled by TripInfoSheet.
     if (id === undefined) return;
     const current = change.kind === "create_item" ? undefined : trip.items.find((i) => i.id === id);
     const draft = item && draftFromItem(item);
@@ -189,7 +189,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
         onReAdd={openNew}
       />
 
-      <TripInfoEditor trip={trip} writer={writer} openRequest={tripInfoRequest} offline={offline} />
+      <TripInfoSheet trip={trip} writer={writer} openRequest={tripInfoRequest} offline={offline} />
     </main>
   );
 }
