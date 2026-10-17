@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { RpcClient } from "@/lib/rpc";
 import { describe, expect, it } from "vitest";
 import { sendChange } from "./send-change";
 import type { ItemSnapshot } from "./snapshot";
@@ -19,7 +19,7 @@ function clientAnswering(answer: () => Response | Promise<Response>) {
         },
       };
     },
-  } as unknown as SupabaseClient;
+  } as unknown as RpcClient;
   return { client, calls };
 }
 

@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { rpcErrorCode, type RpcClient } from "@/lib/rpc";
 import type { TripChange } from "./changes";
 
 /**
@@ -31,12 +31,10 @@ function rpcCall(token: string, change: TripChange): [string, Record<string, unk
   }
 }
 
-type RpcError = { code?: string; message?: string } | null;
-
 /** Sends one change through its RPC (spec 5.3) and classifies the result. */
-export async function sendChange(client: SupabaseClient, token: string, change: TripChange): Promise<SendOutcome> {
+export async function sendChange(client: RpcClient, token: string, change: TripChange): Promise<SendOutcome> {
   const [fn, args] = rpcCall(token, change);
-  let response: { error: RpcError; status: number };
+  let response: Awaited<ReturnType<RpcClient["rpc"]>>;
   try {
     response = await client.rpc(fn, args).abortSignal(AbortSignal.timeout(SEND_TIMEOUT_MS));
   } catch {
@@ -44,8 +42,8 @@ export async function sendChange(client: SupabaseClient, token: string, change: 
   }
   const { error, status } = response;
   if (!error) return { kind: "ok" };
-  // RPC errors are raised with errcode P0001 and the code in `message` (spec 5.5).
-  if (error.code === "P0001" && error.message) return { kind: "rejected", code: error.message };
+  const code = rpcErrorCode(error);
+  if (code) return { kind: "rejected", code };
   // supabase-js reports network failures and aborted requests with status 0.
   if (status === 0 || status === 408 || status >= 500) return { kind: "retry" };
   return { kind: "rejected", code: "UNKNOWN" };

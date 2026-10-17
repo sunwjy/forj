@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { RpcClient } from "@/lib/rpc";
 import type { Metadata } from "next";
 import { getSupabase } from "@/lib/supabase";
 import { fetchTrip } from "./fetch-trip";
@@ -12,7 +12,7 @@ import { periodLabel } from "./format";
  */
 export async function tripMetadata(
   token: string,
-  client: SupabaseClient = getSupabase(),
+  client: RpcClient = getSupabase(),
 ): Promise<Metadata | "not_found"> {
   let result;
   try {

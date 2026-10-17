@@ -1,11 +1,11 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { RpcClient } from "@/lib/rpc";
 import { describe, expect, it } from "vitest";
 import type { TripSnapshot } from "./snapshot";
 import { tripMetadata } from "./trip-metadata";
 
 /** A stand-in for the Supabase client at the network boundary. */
 function clientReturning(result: { data: unknown; error: unknown }) {
-  return { rpc: async () => result } as unknown as SupabaseClient;
+  return { rpc: async () => result } as unknown as RpcClient;
 }
 
 const snapshot: TripSnapshot = {

@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { RpcClient } from "@/lib/rpc";
 import { describe, expect, it } from "vitest";
 import { fetchTrip } from "./fetch-trip";
 import type { TripSnapshot } from "./snapshot";
@@ -11,7 +11,7 @@ function clientReturning(result: { data: unknown; error: unknown }) {
       calls.push({ fn, args });
       return result;
     },
-  } as unknown as SupabaseClient;
+  } as unknown as RpcClient;
   return { client, calls };
 }
 

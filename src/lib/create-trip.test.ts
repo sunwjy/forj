@@ -1,16 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { createTrip, type RpcClient } from "./create-trip";
+import { createTrip } from "./create-trip";
+import type { RpcClient } from "./rpc";
 
 const input = { title: "오사카", startDate: "2026-11-20", endDate: "2026-11-23" };
 
+/** A stand-in for the Supabase client at the network boundary. */
 function stubClient(result: { data: unknown; error: unknown }) {
   const calls: Array<[string, unknown]> = [];
-  const client: RpcClient = {
-    rpc: async (fn, args) => {
+  const client = {
+    rpc: async (fn: string, args: unknown) => {
       calls.push([fn, args]);
-      return result as Awaited<ReturnType<RpcClient["rpc"]>>;
+      return result;
     },
-  };
+  } as unknown as RpcClient;
   return { client, calls };
 }
 
@@ -43,11 +45,11 @@ describe("createTrip", () => {
   });
 
   it("reports a thrown network error as failed", async () => {
-    const client: RpcClient = {
+    const client = {
       rpc: async () => {
         throw new TypeError("Failed to fetch");
       },
-    };
+    } as unknown as RpcClient;
     await expect(createTrip(client, input)).resolves.toEqual({ ok: false, reason: "failed" });
   });
 });

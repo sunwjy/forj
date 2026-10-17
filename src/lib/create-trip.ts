@@ -1,12 +1,5 @@
-import type { TripInput } from "./trip-input";
-
-/** The slice of the Supabase client this module needs. */
-export type RpcClient = {
-  rpc: (
-    fn: string,
-    args: Record<string, unknown>,
-  ) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
-};
+import { rpcErrorCode, type RpcClient } from "./rpc";
+import type { TripDraft } from "./trip-input";
 
 export type CreateTripResult =
   | { ok: true; token: string }
@@ -14,7 +7,7 @@ export type CreateTripResult =
   | { ok: false; reason: "disabled" | "failed" };
 
 /** Calls `create_trip`, which returns only the new trip's share token (spec 5.3). */
-export async function createTrip(client: RpcClient, input: TripInput): Promise<CreateTripResult> {
+export async function createTrip(client: RpcClient, input: TripDraft): Promise<CreateTripResult> {
   try {
     const { data, error } = await client.rpc("create_trip", {
       title: input.title,
@@ -22,7 +15,7 @@ export async function createTrip(client: RpcClient, input: TripInput): Promise<C
       end_date: input.endDate,
     });
     if (error) {
-      return { ok: false, reason: error.message === "TRIP_CREATION_DISABLED" ? "disabled" : "failed" };
+      return { ok: false, reason: rpcErrorCode(error) === "TRIP_CREATION_DISABLED" ? "disabled" : "failed" };
     }
     if (typeof data !== "string") return { ok: false, reason: "failed" };
     return { ok: true, token: data };
