@@ -15,7 +15,7 @@ body=$(curl --silent --show-error --max-time 30 \
   -X POST "${SUPABASE_URL}/rest/v1/rpc/get_trip" \
   -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
   -H "Content-Type: application/json" \
-  -d "{\"p_token\":\"${token}\"}" \
+  -d "{\"token\":\"${token}\"}" \
   -w '\n%{http_code}')
 status=${body##*$'\n'}
 body=${body%$'\n'*}
