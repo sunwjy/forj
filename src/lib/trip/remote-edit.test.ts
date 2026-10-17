@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ItemFields } from "./changes";
 import { draftFromItem, itemPatch, validateItemDraft } from "./item-draft";
-import { mergeRemoteItem } from "./remote-edit";
+import { mergeRemoteFields, mergeRemoteItem } from "./remote-edit";
 
 const opened: ItemFields = {
   date: "2026-11-20",
@@ -55,5 +55,17 @@ describe("mergeRemoteItem", () => {
     const checked = validateItemDraft(merged.draft);
     if (!checked.ok) throw new Error(checked.message);
     expect(itemPatch(merged.base, checked.fields)).toEqual({ memo: "내 메모" });
+  });
+});
+
+describe("mergeRemoteFields", () => {
+  it("merges the trip info sheet's title and dates the same way", () => {
+    const base = { title: "후쿠오카", startDate: "2026-11-20", endDate: "2026-11-23" };
+    const draft = { ...base, title: "내 제목" };
+    const latest = { title: "남의 제목", startDate: "2026-11-21", endDate: "2026-11-23" };
+    expect(mergeRemoteFields(base, draft, latest)).toEqual({
+      draft: { title: "내 제목", startDate: "2026-11-21", endDate: "2026-11-23" },
+      marks: { title: "mine", startDate: "theirs" },
+    });
   });
 });

@@ -11,7 +11,9 @@ import { dayChipDate } from "@/lib/trip/format";
 import { periodChange } from "@/lib/trip/period-change";
 import type { TripSnapshot } from "@/lib/trip/snapshot";
 import type { Rejection } from "@/lib/trip/trip-store";
+import { mergeRemoteFields, type RemoteMarks } from "@/lib/trip/remote-edit";
 import type { TripWriter } from "@/lib/trip/use-trip";
+import { OfflineBadge } from "./OfflineBadge";
 import styles from "./TripInfoSheet.module.css";
 
 const DEFAULT_EMOJI = "📍";
@@ -32,6 +34,8 @@ type TripInfoEditorProps = {
   writer: TripWriter;
   /** Changes every time the ✏️ button is pressed; `0` means not yet. */
   openRequest: number;
+  /** Shows the connection-lost badge atop the sheet (spec 7.7). */
+  offline?: boolean;
 };
 
 /**
@@ -39,7 +43,7 @@ type TripInfoEditorProps = {
  * the confirmation when shrinking the period deletes items, and the handling
  * of rejected trip changes (spec 6.5).
  */
-export function TripInfoEditor({ trip, writer, openRequest }: TripInfoEditorProps) {
+export function TripInfoEditor({ trip, writer, openRequest, offline = false }: TripInfoEditorProps) {
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
   // Re-asked after DELETION_MISMATCH, with the sheet already closed.
   const [retry, setRetry] = useState<Period | null>(null);
@@ -88,6 +92,7 @@ export function TripInfoEditor({ trip, writer, openRequest }: TripInfoEditorProp
             key={sheet.key}
             trip={trip}
             draft={sheet.draft}
+            offline={offline}
             onSave={(title, period) => {
               if (title !== undefined) writer.submit({ kind: "update_trip_title", title });
               if (period) submitPeriod(period);
@@ -114,15 +119,26 @@ export function TripInfoEditor({ trip, writer, openRequest }: TripInfoEditorProp
 type TripInfoFormProps = {
   trip: TripSnapshot;
   draft: TripDraft;
+  offline: boolean;
   /** Only what differs from the trip when the sheet opened (spec 6.1). */
   onSave: (title: string | undefined, period: Period | undefined) => void;
 };
 
-function TripInfoForm({ trip, draft: initial, onSave }: TripInfoFormProps) {
+function TripInfoForm({ trip, draft: initial, offline, onSave }: TripInfoFormProps) {
   const id = useId();
-  // What the sheet compares against to send only what changed.
-  const [base] = useState(() => draftOf(trip));
+  // What the sheet compares against to send only what changed: the trip as last seen.
+  const [base, setBase] = useState(() => draftOf(trip));
   const [draft, setDraft] = useState(initial);
+  const [marks, setMarks] = useState<RemoteMarks<keyof TripDraft>>({});
+
+  // A refetch brought someone else's edit: merge it into the form (spec 7.7).
+  const latest = draftOf(trip);
+  if (latest.title !== base.title || latest.startDate !== base.startDate || latest.endDate !== base.endDate) {
+    const merged = mergeRemoteFields(base, draft, latest);
+    setBase(latest);
+    setDraft(merged.draft);
+    setMarks((m) => ({ ...m, ...merged.marks }));
+  }
   const [error, setError] = useState<{ field: "title" | "period"; message: string } | null>(null);
   const [pending, setPending] = useState<{ title: string | undefined; period: Period } | null>(null);
 
@@ -148,11 +164,17 @@ function TripInfoForm({ trip, draft: initial, onSave }: TripInfoFormProps) {
 
   return (
     <form className={formStyles.form} onSubmit={handleSubmit} noValidate>
+      {offline && (
+        <p>
+          <OfflineBadge />
+        </p>
+      )}
       <TripFields
         id={id}
         value={draft}
         onChange={setDraft}
         error={error && { field: error.field, describedBy: errorId }}
+        remote={marks}
       />
       <p className={formStyles.hint}>기간을 줄이면 빠지는 날짜의 일정이 함께 삭제돼요. 저장하기 전에 한 번 더 확인해요.</p>
       {error && (

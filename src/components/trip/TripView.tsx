@@ -192,7 +192,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
         onReAdd={openNew}
       />
 
-      <TripInfoEditor trip={trip} writer={writer} openRequest={tripInfoRequest} />
+      <TripInfoEditor trip={trip} writer={writer} openRequest={tripInfoRequest} offline={offline} />
     </main>
   );
 }

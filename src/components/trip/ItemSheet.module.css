@@ -59,20 +59,6 @@
   border-color: var(--danger);
 }
 
-/* Someone else changed this field while the sheet was open (spec 7.7). */
-.remote {
-  margin: 0 -10px;
-  padding: 8px 10px;
-  border-radius: var(--r-sm);
-  background: var(--accent);
-}
-
-.remoteNote {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--accent-ink);
-}
-
 .offlineLine {
   margin-bottom: 4px;
 }

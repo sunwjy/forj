@@ -20,6 +20,7 @@ import { mergeRemoteItem, type RemoteMark, type RemoteMarks } from "@/lib/trip/r
 import type { ItemSnapshot } from "@/lib/trip/snapshot";
 import styles from "./ItemSheet.module.css";
 import { OfflineBadge } from "./OfflineBadge";
+import { RemoteNote, remoteClass } from "./RemoteField";
 
 /** Common travel emoji offered next to the phone's emoji keyboard (spec 7.4). */
 const SUGGESTED_EMOJI = ["✈️", "🚃", "🚌", "🏨", "🍜", "🍣", "☕️", "🍺", "📸", "🛍️", "🎢", "⛩️", "🌇"];
@@ -82,17 +83,6 @@ function overlapNotice(overlaps: ItemSnapshot[]): string | null {
 
 type ItemFormProps = Omit<ItemSheetProps, "target"> & { target: ItemSheetTarget };
 
-const REMOTE_NOTES: Record<RemoteMark, string> = {
-  theirs: "방금 다른 사람이 바꿨어요",
-  mine: "다른 사람도 바꿨어요. 저장하면 내 입력으로 바뀌어요",
-};
-
-/** Butter highlight and note for a field someone else changed (spec 7.7). */
-function RemoteNote({ mark }: { mark: RemoteMark | undefined }) {
-  if (!mark) return null;
-  return <p className={styles.remoteNote}>{REMOTE_NOTES[mark]}</p>;
-}
-
 function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, onDelete, onReAdd }: ItemFormProps) {
   const id = useId();
   const [draft, setDraft] = useState(target.draft);
@@ -121,7 +111,7 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
     const found = fields.map((f) => marks[f]).filter(Boolean);
     return found.includes("mine") ? "mine" : found[0];
   };
-  const fieldClass = (mark: RemoteMark | undefined) => (mark ? `${styles.field} ${styles.remote}` : styles.field);
+  const fieldClass = (mark: RemoteMark | undefined) => remoteClass(styles.field, mark);
 
   const set = <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => setDraft((d) => ({ ...d, [key]: value }));
 
