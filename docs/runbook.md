@@ -12,6 +12,7 @@ secret 값은 이 문서에 기록하지 않습니다. 이름과 보관 위치�
 - 대시보드: https://supabase.com/dashboard/project/sadblxpatcspkgaznjfy
 - API URL: `https://sadblxpatcspkgaznjfy.supabase.co`
 - 백업 bucket: `backups`(비공개)
+- Realtime: Settings의 "Allow public access"를 켜 둡니다(기본값). 변경 신호는 public Broadcast이므로 끄면 다른 사람의 편집이 새로고침 전까지 반영되지 않습니다(스펙 5.6, ADR 0002).
 - Storage S3 endpoint: `https://sadblxpatcspkgaznjfy.storage.supabase.co/storage/v1/s3`, region `ap-northeast-2`
 
 ### Vercel
