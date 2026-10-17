@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Jua } from "next/font/google";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
+import { Toaster } from "@/components/Toaster";
 import "./globals.css";
 
 const jua = Jua({
@@ -17,7 +18,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className={jua.variable}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

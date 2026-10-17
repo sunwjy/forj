@@ -1,0 +1,44 @@
+.sheet {
+  margin: auto auto 0;
+  width: 100%;
+  max-width: 560px;
+  max-height: 88dvh;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: var(--bg);
+  color: var(--text);
+  overflow-y: auto;
+}
+
+.sheet[open] {
+  animation: sheet-up 380ms var(--spring) both;
+}
+
+.sheet::backdrop {
+  background: rgb(var(--shadow-tint) / 0.35);
+}
+
+.body {
+  padding: 10px 20px calc(28px + env(safe-area-inset-bottom));
+}
+
+.grip {
+  width: 40px;
+  height: 5px;
+  margin: 0 auto 12px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
