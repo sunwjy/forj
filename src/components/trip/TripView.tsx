@@ -7,6 +7,7 @@ import { optimisticCreatedAt } from "@/lib/trip/changes";
 import { type Day, ddayLabel, initialDay, tripDays } from "@/lib/trip/days";
 import { dayChipDate, periodLabel, timeLabel } from "@/lib/trip/format";
 import { blankDraft, draftFromItem, itemFields, type ItemDraft } from "@/lib/trip/item-draft";
+import { copyShareLink } from "@/lib/trip/share-link";
 import type { ItemSnapshot, TripSnapshot } from "@/lib/trip/snapshot";
 import { dayTimeline } from "@/lib/trip/timeline";
 import type { Rejection } from "@/lib/trip/trip-store";
@@ -93,8 +94,12 @@ export function TripView({ trip, today, writer, stalled = false }: TripViewProps
             <span className={styles.dday}>{ddayLabel(trip.start_date, trip.end_date, today)}</span>
           )}
         </div>
-        {/* Copying the share link arrives with spec 7.5. */}
-        <button type="button" className={styles.iconButton} aria-label="공유 링크 복사" disabled>
+        <button
+          type="button"
+          className={styles.iconButton}
+          aria-label="공유 링크 복사"
+          onClick={() => copyShareLink(window.location.href, navigator.clipboard)}
+        >
           🔗
         </button>
       </div>
