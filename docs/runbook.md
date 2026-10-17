@@ -38,7 +38,31 @@ Supabase access token은 두지 않습니다. CI는 `postgresql://postgres.<SUPA
 
 ## 여행 생성 차단 스위치
 
-<!-- 여행 만들기 이슈에서 작성: app_settings.trip_creation_enabled를 끄고 켜는 SQL -->
+남용으로 여행이 대량으로 만들어지는 것을 발견하면, 배포 없이 여행 생성을 즉시 막을 수 있습니다([스펙 8](spec.md#8-남용-방지)). 스위치를 꺼도 이미 있는 여행의 조회와 편집은 그대로 동작합니다.
+
+대시보드의 SQL Editor(https://supabase.com/dashboard/project/sadblxpatcspkgaznjfy/sql)에서 실행합니다.
+
+현재 상태 확인:
+
+```sql
+select trip_creation_enabled from private.app_settings;
+```
+
+끄기:
+
+```sql
+update private.app_settings set trip_creation_enabled = false;
+```
+
+다시 켜기:
+
+```sql
+update private.app_settings set trip_creation_enabled = true;
+```
+
+- 변경은 다음 `create_trip` 호출부터 바로 적용됩니다. 꺼져 있는 동안 `create_trip`은 `TRIP_CREATION_DISABLED`로 거부하고, 첫 화면은 입력을 유지한 채 "지금은 여행을 만들 수 없습니다. 잠시 후 다시 시도해 주세요."라고 안내합니다.
+- `app_settings`에는 행이 하나만 있어야 합니다. `insert`나 `delete`는 하지 말고 `update`만 씁니다.
+- 최근에 만들어진 여행은 `select share_token, title, created_at from private.trips order by created_at desc limit 50;`으로 확인합니다. 남용 여행을 지우는 방법은 「운영자의 여행 삭제」 절을 따릅니다.
 
 ## 운영자의 여행 삭제
 
