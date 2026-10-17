@@ -1,0 +1,106 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { describe, expect, it } from "vitest";
+import { sendChange } from "./send-change";
+import type { ItemSnapshot } from "./snapshot";
+
+type Response = { data: unknown; error: unknown; status: number };
+
+/** A stand-in for the Supabase client at the network boundary. */
+function clientAnswering(answer: () => Response | Promise<Response>) {
+  const calls: { fn: string; args: unknown; signal?: AbortSignal }[] = [];
+  const client = {
+    rpc: (fn: string, args: unknown) => {
+      const call: (typeof calls)[number] = { fn, args };
+      calls.push(call);
+      return {
+        abortSignal(signal: AbortSignal) {
+          call.signal = signal;
+          return Promise.resolve().then(answer);
+        },
+      };
+    },
+  } as unknown as SupabaseClient;
+  return { client, calls };
+}
+
+const ok = () => ({ data: null, error: null, status: 204 });
+const token = "devExampleTrip00000000";
+
+const item: ItemSnapshot = {
+  id: "00000000-0000-4000-8000-000000000999",
+  date: "2026-11-20",
+  title: "라멘",
+  memo: null,
+  start_time: "12:00",
+  end_time: null,
+  emoji: "🍜",
+  created_at: "2026-10-17T00:00:00.000000Z",
+};
+
+describe("sendChange", () => {
+  it("creates an item with its client-generated id and every field", async () => {
+    const { client, calls } = clientAnswering(ok);
+    await expect(sendChange(client, token, { kind: "create_item", item })).resolves.toEqual({ kind: "ok" });
+    expect(calls).toMatchObject([
+      {
+        fn: "create_item",
+        args: {
+          token,
+          id: item.id,
+          date: "2026-11-20",
+          title: "라멘",
+          memo: null,
+          start_time: "12:00",
+          end_time: null,
+          emoji: "🍜",
+        },
+      },
+    ]);
+    expect(calls[0].signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("updates an item with only its patch", async () => {
+    const { client, calls } = clientAnswering(ok);
+    await sendChange(client, token, { kind: "update_item", id: item.id, patch: { memo: null } });
+    expect(calls).toMatchObject([{ fn: "update_item", args: { token, item_id: item.id, patch: { memo: null } } }]);
+  });
+
+  it("deletes an item", async () => {
+    const { client, calls } = clientAnswering(ok);
+    await sendChange(client, token, { kind: "delete_item", id: item.id });
+    expect(calls).toMatchObject([{ fn: "delete_item", args: { token, item_id: item.id } }]);
+  });
+
+  it("reports the error code when the server rejects the change", async () => {
+    const { client } = clientAnswering(() => ({
+      data: null,
+      error: { code: "P0001", message: "DATE_OUT_OF_RANGE", details: "the date is outside the trip" },
+      status: 400,
+    }));
+    await expect(sendChange(client, token, { kind: "create_item", item })).resolves.toEqual({
+      kind: "rejected",
+      code: "DATE_OUT_OF_RANGE",
+    });
+  });
+
+  it("asks for a retry on network errors, timeouts and server errors", async () => {
+    const network = clientAnswering(() => ({ data: null, error: { message: "TypeError: fetch failed", code: "" }, status: 0 }));
+    const unavailable = clientAnswering(() => ({ data: null, error: { message: "Service Unavailable", code: "" }, status: 503 }));
+    const thrown = clientAnswering(() => Promise.reject(new Error("aborted")));
+    for (const { client } of [network, unavailable, thrown]) {
+      await expect(sendChange(client, token, { kind: "delete_item", id: item.id })).resolves.toEqual({ kind: "retry" });
+    }
+  });
+
+  it("rejects other client errors instead of retrying them forever", async () => {
+    const { client } = clientAnswering(() => ({
+      data: null,
+      error: { code: "PGRST202", message: "Could not find the function public.create_item" },
+      status: 404,
+    }));
+    await expect(sendChange(client, token, { kind: "create_item", item })).resolves.toEqual({
+      kind: "rejected",
+      code: "UNKNOWN",
+    });
+  });
+});

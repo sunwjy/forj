@@ -1,0 +1,101 @@
+import { describe, expect, it } from "vitest";
+import { optimisticCreatedAt, rebase } from "./changes";
+import type { ItemSnapshot, TripSnapshot } from "./snapshot";
+
+function item(overrides: Partial<ItemSnapshot> & Pick<ItemSnapshot, "id">): ItemSnapshot {
+  return {
+    date: "2026-11-20",
+    title: overrides.id,
+    memo: null,
+    start_time: null,
+    end_time: null,
+    emoji: null,
+    created_at: "2026-10-17T00:00:00.000000Z",
+    ...overrides,
+  };
+}
+
+const lunch = item({ id: "lunch", title: "라멘", start_time: "12:00", end_time: "13:00" });
+const dinner = item({ id: "dinner", title: "포장마차", start_time: "20:00" });
+
+const snapshot: TripSnapshot = {
+  title: "후쿠오카",
+  start_date: "2026-11-20",
+  end_date: "2026-11-22",
+  items: [lunch, dinner],
+};
+
+describe("rebase", () => {
+  it("is the snapshot itself when nothing is pending", () => {
+    expect(rebase(snapshot, [])).toEqual(snapshot);
+  });
+
+  it("adds a created item in timeline order", () => {
+    const breakfast = item({ id: "breakfast", start_time: "08:00" });
+    expect(rebase(snapshot, [{ kind: "create_item", item: breakfast }]).items).toEqual([
+      breakfast,
+      lunch,
+      dinner,
+    ]);
+  });
+
+  it("keeps the server's copy when the snapshot already has the created item", () => {
+    const optimistic = { ...lunch, title: "낙관적으로 그린 라멘", created_at: "2026-10-18T00:00:00.000000Z" };
+    expect(rebase(snapshot, [{ kind: "create_item", item: optimistic }]).items).toEqual([lunch, dinner]);
+  });
+
+  it("applies only the patched fields of an update and re-sorts", () => {
+    const view = rebase(snapshot, [
+      { kind: "update_item", id: "lunch", patch: { title: "돈코츠 라멘", start_time: "21:00", end_time: null } },
+    ]);
+    expect(view.items).toEqual([
+      dinner,
+      { ...lunch, title: "돈코츠 라멘", start_time: "21:00", end_time: null },
+    ]);
+  });
+
+  it("ignores an update or delete for an item the snapshot no longer has", () => {
+    expect(
+      rebase(snapshot, [
+        { kind: "update_item", id: "gone", patch: { title: "x" } },
+        { kind: "delete_item", id: "gone" },
+      ]),
+    ).toEqual(snapshot);
+  });
+
+  it("removes a deleted item", () => {
+    expect(rebase(snapshot, [{ kind: "delete_item", id: "lunch" }]).items).toEqual([dinner]);
+  });
+
+  it("replays changes in the order they were made", () => {
+    const snack = item({ id: "snack", title: "간식" });
+    const view = rebase(snapshot, [
+      { kind: "create_item", item: snack },
+      { kind: "update_item", id: "snack", patch: { title: "편의점 간식" } },
+      { kind: "update_item", id: "snack", patch: { date: "2026-11-21" } },
+      { kind: "delete_item", id: "dinner" },
+    ]);
+    expect(view.items).toEqual([lunch, { ...snack, title: "편의점 간식", date: "2026-11-21" }]);
+  });
+
+  it("sorts an optimistic item with the server's items by its created_at", () => {
+    const later = item({ id: "zz-later", start_time: "12:00", created_at: optimisticCreatedAt(new Date("2026-10-17T00:00:00.001Z")) });
+    const view = rebase(snapshot, [{ kind: "create_item", item: later }]);
+    expect(view.items.map((i) => i.id)).toEqual(["lunch", "zz-later", "dinner"]);
+  });
+
+  it("leaves the snapshot unchanged", () => {
+    const before = structuredClone(snapshot);
+    rebase(snapshot, [
+      { kind: "update_item", id: "lunch", patch: { title: "바뀜" } },
+      { kind: "delete_item", id: "dinner" },
+    ]);
+    expect(snapshot).toEqual(before);
+  });
+});
+
+describe("optimisticCreatedAt", () => {
+  it("uses the server's fixed-width UTC format with microseconds", () => {
+    expect(optimisticCreatedAt(new Date("2026-10-17T09:05:03.042+09:00"))).toBe("2026-10-17T00:05:03.042000Z");
+  });
+});
