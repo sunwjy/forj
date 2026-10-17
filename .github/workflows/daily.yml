@@ -1,0 +1,47 @@
+# Daily keepalive and encrypted backup (spec 9.6). GitHub disables scheduled
+# workflows after 60 days without commits; see docs/runbook.md.
+name: Daily
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # 03:00 KST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Keepalive
+        env:
+          SUPABASE_URL: https://${{ vars.SUPABASE_PROJECT_REF }}.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+        run: scripts/keepalive.sh
+
+      - uses: supabase/setup-cli@v1
+        if: ${{ !cancelled() }}
+        with:
+          version: 2.121.0
+
+      # Runs even if the keepalive failed: a backup matters more than a green keepalive.
+      # Dumps are piped into gpg inside the script; no plaintext reaches disk, logs or artifacts.
+      - name: Backup
+        if: ${{ !cancelled() }}
+        env:
+          SUPABASE_DB_URL: postgresql://postgres.${{ vars.SUPABASE_PROJECT_REF }}:${{ secrets.SUPABASE_DB_PASSWORD }}@${{ vars.SUPABASE_POOLER_HOST }}:5432/postgres
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          BACKUP_S3_ENDPOINT: https://${{ vars.SUPABASE_PROJECT_REF }}.storage.supabase.co/storage/v1/s3
+          BACKUP_BUCKET: backups
+          AWS_ACCESS_KEY_ID: ${{ secrets.SUPABASE_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SUPABASE_S3_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ap-northeast-2
+        run: scripts/backup.sh
