@@ -123,3 +123,16 @@ export function recordTripLookup(recent: RecentTrips, token: string, state: Trip
     recent.forget(token);
   }
 }
+
+const TRIP_PATH = /^\/t\/([^/]+)\/?$/;
+
+/**
+ * Drops the trip whose screen is at `pathname` (`/t/<token>`) from recent
+ * trips. For the not-found page a missing trip renders on first open, where
+ * the server answered `TRIP_NOT_FOUND` before the trip screen could mount
+ * (spec 7.2, 7.6). Any other path is left alone.
+ */
+export function forgetTripAtPath(recent: RecentTrips, pathname: string) {
+  const match = TRIP_PATH.exec(pathname);
+  if (match) recent.forget(match[1]);
+}

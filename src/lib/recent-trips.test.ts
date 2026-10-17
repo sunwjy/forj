@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createRecentTrips, recordTripLookup, type RecentTripsStorage } from "./recent-trips";
+import { createRecentTrips, forgetTripAtPath, recordTripLookup, type RecentTripsStorage } from "./recent-trips";
 import type { TripSnapshot } from "./trip/snapshot";
 
 /** An in-memory stand-in for `localStorage`. */
@@ -220,6 +220,30 @@ describe("recordTripLookup", () => {
     recordTripLookup(recent, osaka.token, { status: "error" });
     recordTripLookup(recent, osaka.token, { status: "error", trip: renamed });
     recordTripLookup(recent, osaka.token, { status: "loading" });
+
+    expect(recent.list()).toEqual(before);
+  });
+});
+
+describe("forgetTripAtPath", () => {
+  it("the not-found page of a trip's link removes that trip from the list", () => {
+    const recent = createRecentTrips(memoryStorage(), tickingClock());
+    recent.remember(osaka);
+    recent.remember(jeju);
+
+    forgetTripAtPath(recent, `/t/${osaka.token}`);
+
+    expect(recent.list().map((trip) => trip.token)).toEqual([jeju.token]);
+  });
+
+  it("any other path leaves the list alone", () => {
+    const recent = createRecentTrips(memoryStorage(), tickingClock());
+    recent.remember(osaka);
+    const before = recent.list();
+
+    forgetTripAtPath(recent, "/");
+    forgetTripAtPath(recent, `/t/${osaka.token}/extra`);
+    forgetTripAtPath(recent, `/x/${osaka.token}`);
 
     expect(recent.list()).toEqual(before);
   });
