@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { showToast } from "@/components/toast";
-import { optimisticCreatedAt } from "@/lib/trip/changes";
+import { changedItemId, optimisticCreatedAt } from "@/lib/trip/changes";
 import { type Day, ddayLabel, initialDay, tripDays } from "@/lib/trip/days";
 import { dayChipDate, periodLabel, timeLabel } from "@/lib/trip/format";
 import { blankDraft, draftFromItem, itemFields, type ItemDraft } from "@/lib/trip/item-draft";
@@ -13,6 +13,7 @@ import { dayTimeline } from "@/lib/trip/timeline";
 import type { Rejection } from "@/lib/trip/trip-store";
 import type { TripWriter } from "@/lib/trip/use-trip";
 import { ItemSheet, type ItemSheetTarget } from "./ItemSheet";
+import { TripInfoEditor } from "./TripInfoSheet";
 import styles from "./trip.module.css";
 
 const DEFAULT_EMOJI = "📍";
@@ -46,6 +47,7 @@ export function TripView({ trip, today, writer, stalled = false }: TripViewProps
 
   const [sheet, setSheet] = useState<ItemSheetTarget | null>(null);
   const sheetKey = useRef(0);
+  const [tripInfoRequest, setTripInfoRequest] = useState(0);
 
   /** Keeps a draft's date if it is still in the trip; otherwise uses the selected day. */
   const inTrip = (draft: ItemDraft): ItemDraft =>
@@ -61,7 +63,10 @@ export function TripView({ trip, today, writer, stalled = false }: TripViewProps
 
   // The store has already reverted a rejected change; say so and offer the input back (spec 6.5).
   const handleRejection = useEffectEvent(({ change, code, item }: Rejection) => {
-    const current = change.kind === "create_item" ? undefined : trip.items.find((i) => i.id === change.id);
+    const id = changedItemId(change);
+    // Trip changes are handled by TripInfoEditor.
+    if (id === undefined) return;
+    const current = change.kind === "create_item" ? undefined : trip.items.find((i) => i.id === id);
     const draft = item && draftFromItem(item);
     const editAgain = () => {
       if (current) openEdit(current, draft);
@@ -105,7 +110,17 @@ export function TripView({ trip, today, writer, stalled = false }: TripViewProps
       </div>
 
       <header className={styles.head}>
-        <h1 className={styles.title}>{trip.title}</h1>
+        <h1 className={styles.title}>
+          {trip.title}
+          <button
+            type="button"
+            className={styles.editTrip}
+            aria-label="여행 정보 수정"
+            onClick={() => setTripInfoRequest((n) => n + 1)}
+          >
+            ✏️
+          </button>
+        </h1>
         <p className={`${styles.period} num`}>{periodLabel(trip.start_date, trip.end_date)}</p>
       </header>
 
@@ -176,6 +191,8 @@ export function TripView({ trip, today, writer, stalled = false }: TripViewProps
         onDelete={(id) => writer.submit({ kind: "delete_item", id })}
         onReAdd={openNew}
       />
+
+      <TripInfoEditor trip={trip} writer={writer} openRequest={tripInfoRequest} />
     </main>
   );
 }

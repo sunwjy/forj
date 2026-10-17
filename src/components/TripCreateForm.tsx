@@ -4,8 +4,9 @@ import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
 import { createTrip } from "@/lib/create-trip";
 import { getSupabase } from "@/lib/supabase";
-import { MAX_PERIOD_DAYS, MAX_TITLE_LENGTH, validateTripInput, type TripInput } from "@/lib/trip-input";
+import { validateTripInput, type TripInput } from "@/lib/trip-input";
 import { showToast } from "./toast";
+import { TripFields } from "./TripFields";
 import styles from "./TripCreateForm.module.css";
 
 export type CreatedTrip = TripInput & { token: string };
@@ -62,56 +63,19 @@ export function TripCreateForm({ onCreated }: TripCreateFormProps) {
   }
 
   const errorId = `${id}-error`;
-  const describe = (field: "title" | "period") => (error?.field === field ? errorId : undefined);
 
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      <div className={styles.field}>
-        <label htmlFor={`${id}-title`}>여행 제목</label>
-        <input
-          id={`${id}-title`}
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          placeholder="예: 오사카 먹방 여행"
-          autoComplete="off"
-          enterKeyHint="next"
-          aria-invalid={error?.field === "title"}
-          aria-describedby={describe("title")}
-          // The browser counts UTF-16 units; the code-point limit is checked on submit.
-          maxLength={MAX_TITLE_LENGTH * 2}
-        />
-      </div>
-      <div className={styles.row}>
-        <div className={styles.field}>
-          <label htmlFor={`${id}-start`}>시작일</label>
-          <input
-            id={`${id}-start`}
-            type="date"
-            value={startDate}
-            onChange={(event) => {
-              const next = event.target.value;
-              setStartDate(next);
-              // Most people pick the start first; keep the end from landing before it.
-              if (next && (!endDate || endDate < next)) setEndDate(next);
-            }}
-            aria-invalid={error?.field === "period"}
-            aria-describedby={describe("period")}
-          />
-        </div>
-        <div className={styles.field}>
-          <label htmlFor={`${id}-end`}>종료일</label>
-          <input
-            id={`${id}-end`}
-            type="date"
-            value={endDate}
-            min={startDate || undefined}
-            onChange={(event) => setEndDate(event.target.value)}
-            aria-invalid={error?.field === "period"}
-            aria-describedby={describe("period")}
-          />
-        </div>
-      </div>
-      <p className={styles.hint}>기간은 최대 {MAX_PERIOD_DAYS}일까지 정할 수 있어요.</p>
+      <TripFields
+        id={id}
+        value={{ title, startDate, endDate }}
+        onChange={(next) => {
+          setTitle(next.title);
+          setStartDate(next.startDate);
+          setEndDate(next.endDate);
+        }}
+        error={error && { field: error.field, describedBy: errorId }}
+      />
       {error && (
         <p id={errorId} className={styles.error} role="alert">
           {error.message}

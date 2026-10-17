@@ -239,6 +239,20 @@ describe("trip store", () => {
     ]);
   });
 
+  it("restores the period and its items when a period change is rejected", async () => {
+    const { store, sends, rejections } = await loaded([item("a"), item("b", { date: "2026-11-22" })]);
+    const change: TripChange = { kind: "set_trip_dates", start_date: "2026-11-20", end_date: "2026-11-21", deleted_ids: ["b"] };
+    store.submit(change);
+    expect(store.getState().trip).toMatchObject({ trip: { end_date: "2026-11-21" } });
+    expect(shownTitles(store)).toEqual(["a"]);
+
+    sends[0].answer.resolve({ kind: "rejected", code: "DELETION_MISMATCH" });
+    await flush();
+    expect(store.getState().trip).toMatchObject({ trip: { end_date: "2026-11-22" } });
+    expect(shownTitles(store)).toEqual(["a", "b"]);
+    expect(rejections).toEqual([{ change, code: "DELETION_MISMATCH", item: undefined }]);
+  });
+
   it("drops the queue and shows not found when the trip disappears while sending", async () => {
     const { store, sends, rejections } = await loaded([item("a")]);
     store.submit({ kind: "delete_item", id: "a" });
