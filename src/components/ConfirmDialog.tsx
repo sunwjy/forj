@@ -47,8 +47,13 @@ export function ConfirmDialog({
       aria-labelledby={`${id}-title`}
       aria-describedby={`${id}-body`}
       className={styles.dialog}
-      onClose={onCancel}
+      onClose={(event) => {
+        // React bubbles `close` to an enclosing sheet's <dialog>, which would close it too.
+        event.stopPropagation();
+        onCancel();
+      }}
       onClick={(event) => {
+        event.stopPropagation();
         if (event.target === event.currentTarget) onCancel();
       }}
     >

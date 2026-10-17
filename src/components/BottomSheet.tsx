@@ -29,7 +29,10 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
       ref={ref}
       className={styles.sheet}
       aria-label={title}
-      onClose={onClose}
+      onClose={(event) => {
+        // Ignore `close` bubbling up (in React) from a dialog opened inside the sheet.
+        if (event.target === event.currentTarget) onClose();
+      }}
       onClick={(event) => {
         // A click on the dialog element itself is a click on the backdrop.
         if (event.target === event.currentTarget) onClose();
