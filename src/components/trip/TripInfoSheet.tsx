@@ -223,7 +223,7 @@ function PeriodConfirmDialog({ open, trip, period, retry = false, onConfirm, onC
   const title = deletedItems.length > 0 ? `일정 ${deletedItems.length}개가 함께 삭제돼요` : "기간을 바꿀까요?";
   const body =
     deletedItems.length > 0
-      ? `${changed}빠지는 날짜: ${dates}. 이 날짜의 일정이 함께 쓰는 모든 사람의 일정표에서 사라지며, 되돌릴 수 없어요.`
+      ? `${changed}빠지는 날짜: ${dates}. 이 날짜의 일정이 함께 쓰는 모든 사람의 여행에서 사라지며, 되돌릴 수 없어요.`
       : `${changed}지금은 기간에서 빠지는 날짜에 일정이 없어요.`;
 
   return (

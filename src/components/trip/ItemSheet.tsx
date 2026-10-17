@@ -328,7 +328,7 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
         <ConfirmDialog
           open={confirmingDelete}
           title="이 일정을 삭제할까요?"
-          body={`「${target.base.title}」${particle(target.base.title, "을", "를")} 함께 쓰는 모든 사람의 일정표에서 지웁니다. 되돌릴 수 없어요.`}
+          body={`「${target.base.title}」${particle(target.base.title, "을", "를")} 함께 쓰는 모든 사람의 여행에서 지웁니다. 되돌릴 수 없어요.`}
           confirmLabel="삭제"
           danger
           onCancel={() => setConfirmingDelete(false)}
