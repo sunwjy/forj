@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useMemo, useState, useSyncExternalStore } from "react";
 import { getSupabase } from "@/lib/supabase";
 import type { TripChange } from "./changes";
 import { fetchTrip } from "./fetch-trip";
@@ -71,4 +71,13 @@ export function useTrip(token: string): UseTrip {
     stalled: snapshot.stalled,
     pendingCount: snapshot.pendingCount,
   };
+}
+
+/**
+ * Runs `onRejected` for every change the server refuses (spec 6.5). It always
+ * sees the latest props and state, and the subscription lasts while `writer` does.
+ */
+export function useRejections(writer: TripWriter, onRejected: (rejection: Rejection) => void) {
+  const handle = useEffectEvent(onRejected);
+  useEffect(() => writer.onRejected(handle), [writer]);
 }

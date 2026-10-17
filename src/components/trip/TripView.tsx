@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { showToast } from "@/components/toast";
 import { changedItemId, optimisticCreatedAt } from "@/lib/trip/changes";
 import { type Day, ddayLabel, initialDay, tripDays } from "@/lib/trip/days";
@@ -10,8 +10,7 @@ import { blankDraft, draftFromItem, itemFields, type ItemDraft } from "@/lib/tri
 import { copyShareLink } from "@/lib/trip/share-link";
 import type { ItemSnapshot, TripSnapshot } from "@/lib/trip/snapshot";
 import { dayTimeline } from "@/lib/trip/timeline";
-import type { Rejection } from "@/lib/trip/trip-store";
-import type { TripWriter } from "@/lib/trip/use-trip";
+import { useRejections, type TripWriter } from "@/lib/trip/use-trip";
 import { ItemSheet, type ItemSheetTarget } from "./ItemSheet";
 import { OfflineBadge } from "./OfflineBadge";
 import { TripInfoEditor } from "./TripInfoSheet";
@@ -63,7 +62,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
   }
 
   // The store has already reverted a rejected change; say so and offer the input back (spec 6.5).
-  const handleRejection = useEffectEvent(({ change, code, item }: Rejection) => {
+  useRejections(writer, ({ change, code, item }) => {
     const id = changedItemId(change);
     // Trip changes are handled by TripInfoEditor.
     if (id === undefined) return;
@@ -82,8 +81,6 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
       showToast(FAILED_TOAST, current ? [{ label: "다시 편집", onClick: editAgain }] : []);
     }
   });
-
-  useEffect(() => writer.onRejected(handleRejection), [writer]);
 
   return (
     <main className={styles.screen}>

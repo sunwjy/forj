@@ -16,8 +16,9 @@ import {
   type ItemDraftField,
 } from "@/lib/trip/item-draft";
 import { addMinutes, durationMinutes, overlappingItems } from "@/lib/trip/item-time";
-import { mergeRemoteItem, type RemoteMark, type RemoteMarks } from "@/lib/trip/remote-edit";
+import { mergeRemoteItem, type RemoteMark } from "@/lib/trip/remote-edit";
 import type { ItemSnapshot } from "@/lib/trip/snapshot";
+import { useRemoteEdits } from "@/lib/trip/use-remote-edits";
 import styles from "./ItemSheet.module.css";
 import { OfflineBadge } from "./OfflineBadge";
 import { RemoteNote, remoteClass } from "./RemoteField";
@@ -85,28 +86,23 @@ type ItemFormProps = Omit<ItemSheetProps, "target"> & { target: ItemSheetTarget 
 
 function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, onDelete, onReAdd }: ItemFormProps) {
   const id = useId();
-  const [draft, setDraft] = useState(target.draft);
-  const [error, setError] = useState<{ field: ItemDraftField; message: string } | null>(null);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-  // The item as last seen, so saving sends only my edits (spec 6.1).
-  const [base, setBase] = useState(target.mode === "edit" ? target.base : undefined);
-  const [marks, setMarks] = useState<RemoteMarks>({});
-
   const editing = target.mode === "edit";
   const current = editing ? items.find((i) => i.id === target.id) : undefined;
   // Someone else deleted the item while the sheet was open (spec 6.5).
   const deleted = editing && !current;
 
-  // A refetch brought someone else's edit: merge it into the form (spec 7.7).
-  if (current && base) {
-    const latest = itemFields(current);
-    if (Object.keys(itemPatch(base, latest)).length > 0) {
-      const merged = mergeRemoteItem(base, draft, latest);
-      setBase(merged.base);
-      setDraft(merged.draft);
-      setMarks((m) => ({ ...m, ...merged.marks }));
-    }
-  }
+  // The item as last seen, so saving sends only my edits (spec 6.1); a
+  // refetch with someone else's edit is merged into the form (spec 7.7).
+  const { base, draft, setDraft, marks } = useRemoteEdits({
+    initialBase: target.mode === "edit" ? target.base : undefined,
+    initialDraft: target.draft,
+    latest: current && itemFields(current),
+    differs: (seen, latest) => Object.keys(itemPatch(seen, latest)).length > 0,
+    merge: mergeRemoteItem,
+  });
+  const [error, setError] = useState<{ field: ItemDraftField; message: string } | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
   const remote = (...fields: (keyof ItemDraft)[]): RemoteMark | undefined => {
     const found = fields.map((f) => marks[f]).filter(Boolean);
     return found.includes("mine") ? "mine" : found[0];

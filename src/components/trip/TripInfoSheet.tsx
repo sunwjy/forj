@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useId, useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { showToast } from "@/components/toast";
@@ -10,9 +10,9 @@ import { validateTripInput, type Period, type TripDraft } from "@/lib/trip-input
 import { dayChipDate } from "@/lib/trip/format";
 import { periodChange } from "@/lib/trip/period-change";
 import type { TripSnapshot } from "@/lib/trip/snapshot";
-import type { Rejection } from "@/lib/trip/trip-store";
-import { mergeRemoteFields, type RemoteMarks } from "@/lib/trip/remote-edit";
-import type { TripWriter } from "@/lib/trip/use-trip";
+import { mergeRemoteFields } from "@/lib/trip/remote-edit";
+import { useRemoteEdits } from "@/lib/trip/use-remote-edits";
+import { useRejections, type TripWriter } from "@/lib/trip/use-trip";
 import { OfflineBadge } from "./OfflineBadge";
 import styles from "./TripInfoSheet.module.css";
 
@@ -64,7 +64,7 @@ export function TripInfoEditor({ trip, writer, openRequest, offline = false }: T
   }
 
   // The store has already reverted the change (spec 6.5).
-  const handleRejection = useEffectEvent(({ change, code }: Rejection) => {
+  useRejections(writer, ({ change, code }) => {
     if (change.kind === "set_trip_dates") {
       const period = { startDate: change.start_date, endDate: change.end_date };
       if (code === "DELETION_MISMATCH") {
@@ -79,8 +79,6 @@ export function TripInfoEditor({ trip, writer, openRequest, offline = false }: T
       showToast(FAILED_TOAST, [{ label: "다시 편집", onClick: () => open({ ...draftOf(trip), title: change.title }) }]);
     }
   });
-
-  useEffect(() => writer.onRejected(handleRejection), [writer]);
 
   return (
     <>
@@ -124,19 +122,17 @@ type TripInfoFormProps = {
 
 function TripInfoForm({ trip, draft: initial, offline, onSave }: TripInfoFormProps) {
   const id = useId();
-  // What the sheet compares against to send only what changed: the trip as last seen.
-  const [base, setBase] = useState(() => draftOf(trip));
-  const [draft, setDraft] = useState(initial);
-  const [marks, setMarks] = useState<RemoteMarks<keyof TripDraft>>({});
-
-  // A refetch brought someone else's edit: merge it into the form (spec 7.7).
+  // What the sheet compares against to send only what changed: the trip as
+  // last seen. A refetch with someone else's edit is merged in (spec 7.7).
   const latest = draftOf(trip);
-  if (latest.title !== base.title || latest.startDate !== base.startDate || latest.endDate !== base.endDate) {
-    const merged = mergeRemoteFields(base, draft, latest);
-    setBase(latest);
-    setDraft(merged.draft);
-    setMarks((m) => ({ ...m, ...merged.marks }));
-  }
+  const { base = latest, draft, setDraft, marks } = useRemoteEdits({
+    initialBase: latest,
+    initialDraft: initial,
+    latest,
+    differs: (seen, now) =>
+      seen.title !== now.title || seen.startDate !== now.startDate || seen.endDate !== now.endDate,
+    merge: (seen: TripDraft, mine: TripDraft, now: TripDraft) => ({ base: now, ...mergeRemoteFields(seen, mine, now) }),
+  });
   const [error, setError] = useState<{ field: "title" | "period"; message: string } | null>(null);
   const [pending, setPending] = useState<{ title: string | undefined; period: Period } | null>(null);
 
