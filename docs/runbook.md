@@ -18,6 +18,9 @@ secret 값은 이 문서에 기록하지 않습니다. 이름과 보관 위치�
 ### Vercel
 
 - 프로젝트: 팀 `sunwjy`의 `forj`, GitHub `sunwjy/forj`와 연결
+- 운영 URL: https://forj-kohl.vercel.app . 공유 링크는 현재 페이지 주소를 복사하므로, 사용자에게는 이 주소를 안내합니다.
+- 팀 범위 URL `forj-sunwjy.vercel.app`, `forj-git-main-sunwjy.vercel.app`은 Deployment Protection 때문에 Vercel 로그인으로 redirect됩니다. 외부에 공유하지 않습니다.
+- 리전 `icn1`과 framework(`nextjs`)는 `vercel.json`에서 지정합니다. 프로젝트 설정의 framework preset은 비어 있으므로, `vercel.json`에서 `framework`를 빼면 배포가 `STATIC_BUILD_NO_OUT_DIR`로 실패합니다.
 - 환경 변수: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`를 Production·Preview·Development에 등록
 - Deploy Hook: Settings → Git → Deploy Hooks에서 발급하며, URL은 GitHub secret에만 둡니다.
 
