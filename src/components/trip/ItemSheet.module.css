@@ -1,0 +1,240 @@
+/* Item sheet (spec 7.4), after the core-screens prototype's form styles. */
+
+.form {
+  display: grid;
+  gap: 4px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  padding: 8px 0;
+  min-width: 0;
+  border: 0;
+}
+
+.field > label,
+.field > legend {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.legendNote {
+  font-weight: 500;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  /* 16px keeps iOS Safari from zooming on focus. */
+  font-size: 16px;
+}
+
+.field textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--primary-strong);
+  outline: none;
+}
+
+.field input:disabled {
+  opacity: 0.5;
+}
+
+.field [aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.offlineLine {
+  margin-bottom: 4px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Emoji picker */
+.emojis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.emojis button {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.emojis button[aria-pressed="true"] {
+  border-color: var(--primary-strong);
+  background: var(--surface-tint);
+}
+
+.field .emojiInput {
+  width: 72px;
+  min-height: 40px;
+  height: 40px;
+  padding: 0 8px;
+  text-align: center;
+}
+
+/* Duration shortcuts */
+.durations {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.durationLabel {
+  margin-right: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.chip {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--primary-strong);
+  background: var(--surface-tint);
+  color: var(--primary-strong);
+}
+
+/* Overlap notice (spec 2.5) */
+.hint {
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 13px;
+}
+
+.error {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.deletedBanner {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.bannerActions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Buttons */
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.saveButton,
+.dangerButton,
+.softButton,
+.ghostButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 130ms var(--ease-out);
+}
+
+.saveButton:active,
+.dangerButton:active,
+.softButton:active,
+.ghostButton:active {
+  transform: translateY(2px) scale(0.98);
+}
+
+.saveButton {
+  flex: 1;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 2px solid var(--primary-border);
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: 0 4px 0 var(--primary-ledge);
+  font-size: 15px;
+}
+
+.saveButton:active {
+  box-shadow: 0 2px 0 var(--primary-ledge);
+}
+
+.dangerButton {
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  background: none;
+  color: var(--danger);
+  font-size: 15px;
+}
+
+.softButton,
+.ghostButton {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+}
+
+.softButton {
+  background: var(--surface);
+  color: var(--primary-strong);
+}
+
+.ghostButton {
+  background: none;
+  color: var(--text-muted);
+}
+
+.saveButton:disabled,
+.dangerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

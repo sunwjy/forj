@@ -1,0 +1,59 @@
+# Production deploy (spec 9.4): apply migrations first, and trigger the Vercel
+# Deploy Hook only if `supabase db push` succeeded. Vercel's Git auto-deploy is
+# off (vercel.json), so this hook is the only way production changes.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      SUPABASE_POOLER_HOST: ${{ vars.SUPABASE_POOLER_HOST }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+    steps:
+      # Until the production environment is wired up (see docs/runbook.md),
+      # skip instead of failing so merges to main stay green.
+      - id: config
+        run: |
+          missing=""
+          [ -n "$SUPABASE_PROJECT_REF" ] || missing="$missing SUPABASE_PROJECT_REF"
+          [ -n "$SUPABASE_POOLER_HOST" ] || missing="$missing SUPABASE_POOLER_HOST"
+          [ -n "$SUPABASE_DB_PASSWORD" ] || missing="$missing SUPABASE_DB_PASSWORD"
+          [ -n "$VERCEL_DEPLOY_HOOK_URL" ] || missing="$missing VERCEL_DEPLOY_HOOK_URL"
+          if [ -n "$missing" ]; then
+            echo "::warning::Deploy skipped; not configured:$missing"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.config.outputs.ready == 'true'
+        uses: actions/checkout@v5
+
+      - if: steps.config.outputs.ready == 'true'
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.121.0
+
+      # No `supabase link`: it needs an access token that can read the secret key (spec 9.5).
+      - if: steps.config.outputs.ready == 'true'
+        run: >-
+          supabase db push --yes
+          --db-url "postgresql://postgres.${SUPABASE_PROJECT_REF}:${SUPABASE_DB_PASSWORD}@${SUPABASE_POOLER_HOST}:5432/postgres"
+
+      - if: steps.config.outputs.ready == 'true'
+        run: curl --fail --silent --show-error -X POST "$VERCEL_DEPLOY_HOOK_URL" > /dev/null

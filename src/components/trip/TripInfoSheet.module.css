@@ -1,0 +1,20 @@
+/* The items a period change deletes, listed in its confirmation (spec 2.6). */
+.doomed {
+  display: grid;
+  gap: 6px;
+  max-height: 40vh;
+  margin-top: 12px;
+  padding: 10px 12px;
+  overflow-y: auto;
+  border-radius: var(--r-sm);
+  background: var(--danger-soft);
+  font-size: 14px;
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+
+.doomedDate {
+  margin-left: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}

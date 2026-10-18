@@ -1,0 +1,89 @@
+.form {
+  display: grid;
+  gap: 8px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  padding: 8px 0;
+  min-width: 0;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.field input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  /* 16px keeps iOS Safari from zooming on focus. */
+  font-size: 16px;
+}
+
+.field input:focus {
+  border-color: var(--primary-strong);
+  outline: none;
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--primary-strong);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.error {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-strong);
+}
+
+/* Primary button (design spec 4.1). */
+.submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 0 20px;
+  border-radius: var(--r-md);
+  background: var(--primary);
+  color: var(--on-primary);
+  border: 2px solid var(--primary-border);
+  box-shadow: 0 4px 0 var(--primary-ledge);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 130ms var(--ease-out);
+}
+
+.submit:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 0 2px 0 var(--primary-ledge);
+}
+
+.submit:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+/* A note spanning both date columns (spec 7.7). */
+.rowNote {
+  grid-column: 1 / -1;
+}

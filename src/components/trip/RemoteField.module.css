@@ -1,0 +1,13 @@
+/* A field someone else changed while its sheet was open (spec 7.7). */
+.remote {
+  margin: 0 -10px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  background: var(--accent);
+}
+
+.note {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-ink);
+}
