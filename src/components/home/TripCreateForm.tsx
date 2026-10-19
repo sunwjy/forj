@@ -9,7 +9,8 @@ import type { ShareToken } from "@/lib/trip/branded";
 import { validateTripInput, type TripInput } from "@/lib/trip/trip-input";
 import { showToast } from "@/components/toast";
 import { TripFields, type TripFieldsError } from "@/components/trip/TripFields";
-import styles from "./TripCreateForm.module.css";
+import fieldStyles from "@/components/trip/TripFields.module.css";
+import formStyles from "@/components/trip/TripForm.module.css";
 
 export type CreatedTrip = TripInput & { token: ShareToken };
 
@@ -65,7 +66,7 @@ export function TripCreateForm({ onCreated }: TripCreateFormProps) {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
+    <form className={formStyles.form} onSubmit={handleSubmit} noValidate>
       <TripFields
         id={id}
         value={{ title, startDate, endDate }}
@@ -77,12 +78,12 @@ export function TripCreateForm({ onCreated }: TripCreateFormProps) {
         error={error}
       />
       {error?.field === "form" && (
-        <p className={styles.error} role="alert">
+        <p className={fieldStyles.error} role="alert">
           {error.message}
         </p>
       )}
       {/* Stays focusable while creating, so focus isn't dropped mid-request. */}
-      <Button type="submit" className={styles.submit} disabled={pending} focusableWhenDisabled>
+      <Button type="submit" className={formStyles.submit} disabled={pending} focusableWhenDisabled>
         {pending ? "만드는 중…" : "여행 만들기"}
       </Button>
     </form>

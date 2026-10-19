@@ -1,12 +1,7 @@
+/* The trip form shared by the create sheet (spec 7.1) and the trip info sheet. */
 .form {
   display: grid;
   gap: 8px;
-}
-
-.error {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--primary-strong);
 }
 
 /* Primary button (design spec 4.1). */
