@@ -23,13 +23,13 @@ export function addMinutes(time: string, minutes: number): string {
   return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
 }
 
-type Slot = Pick<ItemSnapshot, "id" | "date" | "start_time" | "end_time">;
+type Slot = Pick<ItemSnapshot, "id" | "date" | "startTime" | "endTime">;
 
 /** [start, end) in minutes from a fixed date, or undefined without both times. */
 function span(item: Slot, origin: string): [number, number] | undefined {
-  if (item.start_time === null || item.end_time === null) return undefined;
-  const start = daysBetween(origin, item.date) * DAY_MINUTES + minutesOf(item.start_time);
-  return [start, start + durationMinutes(item.start_time, item.end_time)];
+  if (item.startTime === null || item.endTime === null) return undefined;
+  const start = daysBetween(origin, item.date) * DAY_MINUTES + minutesOf(item.startTime);
+  return [start, start + durationMinutes(item.startTime, item.endTime)];
 }
 
 /**

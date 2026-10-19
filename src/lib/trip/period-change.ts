@@ -16,7 +16,7 @@ export type PeriodChange = {
 export function periodChange(trip: TripSnapshot, startDate: string, endDate: string): PeriodChange {
   const outside = (date: string) => date < startDate || date > endDate;
   return {
-    removedDates: tripDays(trip.start_date, trip.end_date)
+    removedDates: tripDays(trip.startDate, trip.endDate)
       .map((day) => day.date)
       .filter(outside),
     deletedItems: trip.items.filter((item) => outside(item.date)),

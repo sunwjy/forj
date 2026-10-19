@@ -7,21 +7,21 @@ function item(overrides: Partial<ItemSnapshot> & Pick<ItemSnapshot, "id">): Item
     date: "2026-11-20",
     title: overrides.id,
     memo: null,
-    start_time: null,
-    end_time: null,
+    startTime: null,
+    endTime: null,
     emoji: null,
-    created_at: "2026-10-17T00:00:00.000000Z",
+    createdAt: "2026-10-17T00:00:00.000000Z",
     ...overrides,
   };
 }
 
-const lunch = item({ id: "lunch", title: "라멘", start_time: "12:00", end_time: "13:00" });
-const dinner = item({ id: "dinner", title: "포장마차", start_time: "20:00" });
+const lunch = item({ id: "lunch", title: "라멘", startTime: "12:00", endTime: "13:00" });
+const dinner = item({ id: "dinner", title: "포장마차", startTime: "20:00" });
 
 const snapshot: TripSnapshot = {
   title: "후쿠오카",
-  start_date: "2026-11-20",
-  end_date: "2026-11-22",
+  startDate: "2026-11-20",
+  endDate: "2026-11-22",
   items: [lunch, dinner],
 };
 
@@ -31,7 +31,7 @@ describe("rebase", () => {
   });
 
   it("adds a created item in timeline order", () => {
-    const breakfast = item({ id: "breakfast", start_time: "08:00" });
+    const breakfast = item({ id: "breakfast", startTime: "08:00" });
     expect(rebase(snapshot, [{ kind: "create_item", item: breakfast }]).items).toEqual([
       breakfast,
       lunch,
@@ -40,17 +40,17 @@ describe("rebase", () => {
   });
 
   it("keeps the server's copy when the snapshot already has the created item", () => {
-    const optimistic = { ...lunch, title: "낙관적으로 그린 라멘", created_at: "2026-10-18T00:00:00.000000Z" };
+    const optimistic = { ...lunch, title: "낙관적으로 그린 라멘", createdAt: "2026-10-18T00:00:00.000000Z" };
     expect(rebase(snapshot, [{ kind: "create_item", item: optimistic }]).items).toEqual([lunch, dinner]);
   });
 
   it("applies only the patched fields of an update and re-sorts", () => {
     const view = rebase(snapshot, [
-      { kind: "update_item", id: "lunch", patch: { title: "돈코츠 라멘", start_time: "21:00", end_time: null } },
+      { kind: "update_item", id: "lunch", patch: { title: "돈코츠 라멘", startTime: "21:00", endTime: null } },
     ]);
     expect(view.items).toEqual([
       dinner,
-      { ...lunch, title: "돈코츠 라멘", start_time: "21:00", end_time: null },
+      { ...lunch, title: "돈코츠 라멘", startTime: "21:00", endTime: null },
     ]);
   });
 
@@ -78,8 +78,8 @@ describe("rebase", () => {
     expect(view.items).toEqual([lunch, { ...snack, title: "편의점 간식", date: "2026-11-21" }]);
   });
 
-  it("sorts an optimistic item with the server's items by its created_at", () => {
-    const later = item({ id: "zz-later", start_time: "12:00", created_at: optimisticCreatedAt(new Date("2026-10-17T00:00:00.001Z")) });
+  it("sorts an optimistic item with the server's items by its createdAt", () => {
+    const later = item({ id: "zz-later", startTime: "12:00", createdAt: optimisticCreatedAt(new Date("2026-10-17T00:00:00.001Z")) });
     const view = rebase(snapshot, [{ kind: "create_item", item: later }]);
     expect(view.items.map((i) => i.id)).toEqual(["lunch", "zz-later", "dinner"]);
   });
@@ -103,14 +103,14 @@ describe("rebase", () => {
   it("shows a new period, without the items on dates that left it", () => {
     const lastDay = item({ id: "last", date: "2026-11-22" });
     const view = rebase({ ...snapshot, items: [lunch, dinner, lastDay] }, [
-      { kind: "set_trip_dates", start_date: "2026-11-19", end_date: "2026-11-21", deleted_ids: ["last"] },
+      { kind: "set_trip_dates", startDate: "2026-11-19", endDate: "2026-11-21", confirmedDeletedIds: ["last"] },
     ]);
-    expect(view).toEqual({ ...snapshot, start_date: "2026-11-19", end_date: "2026-11-21", items: [lunch, dinner] });
+    expect(view).toEqual({ ...snapshot, startDate: "2026-11-19", endDate: "2026-11-21", items: [lunch, dinner] });
   });
 
   it("replays item changes made after a period change on the new period", () => {
     const view = rebase(snapshot, [
-      { kind: "set_trip_dates", start_date: "2026-11-21", end_date: "2026-11-22", deleted_ids: ["lunch", "dinner"] },
+      { kind: "set_trip_dates", startDate: "2026-11-21", endDate: "2026-11-22", confirmedDeletedIds: ["lunch", "dinner"] },
       { kind: "update_item", id: "lunch", patch: { title: "되살리면 안 됨" } },
     ]);
     expect(view.items).toEqual([]);

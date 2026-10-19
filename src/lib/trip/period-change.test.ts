@@ -3,14 +3,14 @@ import { periodChange } from "./period-change";
 import type { ItemSnapshot, TripSnapshot } from "./snapshot";
 
 function item(id: string, date: string): ItemSnapshot {
-  return { id, date, title: id, memo: null, start_time: null, end_time: null, emoji: null, created_at: "2026-10-17T00:00:00.000000Z" };
+  return { id, date, title: id, memo: null, startTime: null, endTime: null, emoji: null, createdAt: "2026-10-17T00:00:00.000000Z" };
 }
 
 // 11.20 – 11.23, sorted as get_trip sorts.
 const trip: TripSnapshot = {
   title: "오사카",
-  start_date: "2026-11-20",
-  end_date: "2026-11-23",
+  startDate: "2026-11-20",
+  endDate: "2026-11-23",
   items: [item("d1", "2026-11-20"), item("d2", "2026-11-21"), item("d4a", "2026-11-23"), item("d4b", "2026-11-23")],
 };
 

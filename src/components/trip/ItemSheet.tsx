@@ -122,9 +122,9 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
   const set = <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => setDraft((d) => ({ ...d, [key]: value }));
 
   const overlaps =
-    draft.start_time && draft.end_time
+    draft.startTime && draft.endTime
       ? overlappingItems(
-          { id: editing ? target.id : "", date: draft.date, start_time: draft.start_time, end_time: draft.end_time },
+          { id: editing ? target.id : "", date: draft.date, startTime: draft.startTime, endTime: draft.endTime },
           items,
         )
       : [];
@@ -242,7 +242,7 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
         <RemoteNote mark={remote("date")} />
       </Field.Root>
 
-      <fieldset className={fieldClass(remote("start_time", "end_time"))}>
+      <fieldset className={fieldClass(remote("startTime", "endTime"))}>
         <legend>
           시각 <span className={styles.legendNote}>(비워 두면 「시간 미정」)</span>
         </legend>
@@ -251,21 +251,21 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
             <Field.Control
               type="time"
               aria-label="시작 시각"
-              value={draft.start_time}
+              value={draft.startTime}
               onChange={(event) => {
                 const start = event.target.value;
                 // An end time needs a start time (spec 2.3).
-                setDraft((d) => ({ ...d, start_time: start, end_time: start ? d.end_time : "" }));
+                setDraft((d) => ({ ...d, startTime: start, endTime: start ? d.endTime : "" }));
               }}
               aria-describedby={timeErrorId}
             />
           </Field.Root>
-          <Field.Root invalid={invalid("time")} disabled={!draft.start_time}>
+          <Field.Root invalid={invalid("time")} disabled={!draft.startTime}>
             <Field.Control
               type="time"
               aria-label="종료 시각"
-              value={draft.end_time}
-              onChange={(event) => set("end_time", event.target.value)}
+              value={draft.endTime}
+              onChange={(event) => set("endTime", event.target.value)}
               aria-describedby={timeErrorId}
             />
           </Field.Root>
@@ -275,22 +275,22 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
             {error?.message}
           </p>
         )}
-        {draft.start_time && (
+        {draft.startTime && (
           <div className={styles.durations}>
             <span className={styles.durationLabel}>
-              {draft.end_time
-                ? `소요 ${durationLabel(durationMinutes(draft.start_time, draft.end_time))}${
-                    draft.end_time <= draft.start_time ? " · 다음 날 끝나요" : ""
+              {draft.endTime
+                ? `소요 ${durationLabel(durationMinutes(draft.startTime, draft.endTime))}${
+                    draft.endTime <= draft.startTime ? " · 다음 날 끝나요" : ""
                   }`
                 : "소요 시간"}
             </span>
             <ToggleGroup
               className={styles.durationGroup}
               aria-label="소요 시간"
-              value={DURATIONS.filter((minutes) => draft.end_time === addMinutes(draft.start_time, minutes)).map(String)}
+              value={DURATIONS.filter((minutes) => draft.endTime === addMinutes(draft.startTime, minutes)).map(String)}
               onValueChange={(value) => {
                 // Pressing the current duration again keeps it rather than clearing the end time.
-                if (value[0]) set("end_time", addMinutes(draft.start_time, Number(value[0])));
+                if (value[0]) set("endTime", addMinutes(draft.startTime, Number(value[0])));
               }}
             >
               {DURATIONS.map((minutes) => (
@@ -299,7 +299,7 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
                 </Toggle>
               ))}
             </ToggleGroup>
-            <Button className={styles.chip} onClick={() => setDraft((d) => ({ ...d, start_time: "", end_time: "" }))}>
+            <Button className={styles.chip} onClick={() => setDraft((d) => ({ ...d, startTime: "", endTime: "" }))}>
               시각 지우기
             </Button>
           </div>
@@ -309,7 +309,7 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
             {notice}
           </p>
         )}
-        <RemoteNote mark={remote("start_time", "end_time")} />
+        <RemoteNote mark={remote("startTime", "endTime")} />
       </fieldset>
 
       <Field.Root invalid={invalid("memo")} className={fieldClass(remote("memo"))}>

@@ -31,17 +31,17 @@ const item: ItemSnapshot = {
   date: "2026-11-20",
   title: "라멘",
   memo: null,
-  start_time: "12:00",
-  end_time: null,
+  startTime: "12:00",
+  endTime: null,
   emoji: "🍜",
-  created_at: "2026-10-17T00:00:00.000000Z",
+  createdAt: "2026-10-17T00:00:00.000000Z",
 };
 
 describe("sendChange", () => {
   it("creates an item with its client-generated id and every field", async () => {
     const { client, calls } = clientAnswering(ok);
     await expect(sendChange(client, token, { kind: "create_item", item })).resolves.toEqual({ kind: "ok" });
-    expect(calls).toMatchObject([
+    expect(calls).toEqual([
       {
         fn: "create_item",
         args: {
@@ -54,6 +54,7 @@ describe("sendChange", () => {
           end_time: null,
           emoji: "🍜",
         },
+        signal: expect.anything(),
       },
     ]);
     expect(calls[0].signal).toBeInstanceOf(AbortSignal);
@@ -63,6 +64,26 @@ describe("sendChange", () => {
     const { client, calls } = clientAnswering(ok);
     await sendChange(client, token, { kind: "update_item", id: item.id, patch: { memo: null } });
     expect(calls).toMatchObject([{ fn: "update_item", args: { token, item_id: item.id, patch: { memo: null } } }]);
+  });
+
+  it("sends the patch's field names as the server spells them", async () => {
+    const { client, calls } = clientAnswering(ok);
+    await sendChange(client, token, {
+      kind: "update_item",
+      id: item.id,
+      patch: { date: "2026-11-21", startTime: "23:00", endTime: "01:00", emoji: null },
+    });
+    expect(calls).toEqual([
+      {
+        fn: "update_item",
+        args: {
+          token,
+          item_id: item.id,
+          patch: { date: "2026-11-21", start_time: "23:00", end_time: "01:00", emoji: null },
+        },
+        signal: expect.anything(),
+      },
+    ]);
   });
 
   it("deletes an item", async () => {
@@ -81,9 +102,9 @@ describe("sendChange", () => {
     const { client, calls } = clientAnswering(ok);
     await sendChange(client, token, {
       kind: "set_trip_dates",
-      start_date: "2026-11-20",
-      end_date: "2026-11-21",
-      deleted_ids: [item.id],
+      startDate: "2026-11-20",
+      endDate: "2026-11-21",
+      confirmedDeletedIds: [item.id],
     });
     expect(calls).toEqual([
       {

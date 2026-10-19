@@ -6,8 +6,8 @@ const base: ItemFields = {
   date: "2026-11-20",
   title: "라멘",
   memo: "줄 서기",
-  start_time: "12:00",
-  end_time: "13:00",
+  startTime: "12:00",
+  endTime: "13:00",
   emoji: "🍜",
 };
 
@@ -28,17 +28,17 @@ describe("itemPatch", () => {
   });
 
   it("sends the start and end times together when only one of them changed", () => {
-    expect(itemPatch(base, { ...base, end_time: "14:00" })).toEqual({
-      start_time: "12:00",
-      end_time: "14:00",
+    expect(itemPatch(base, { ...base, endTime: "14:00" })).toEqual({
+      startTime: "12:00",
+      endTime: "14:00",
     });
-    expect(itemPatch(base, { ...base, start_time: "11:00" })).toEqual({
-      start_time: "11:00",
-      end_time: "13:00",
+    expect(itemPatch(base, { ...base, startTime: "11:00" })).toEqual({
+      startTime: "11:00",
+      endTime: "13:00",
     });
-    expect(itemPatch(base, { ...base, start_time: null, end_time: null })).toEqual({
-      start_time: null,
-      end_time: null,
+    expect(itemPatch(base, { ...base, startTime: null, endTime: null })).toEqual({
+      startTime: null,
+      endTime: null,
     });
   });
 });
@@ -47,8 +47,8 @@ const draft: ItemDraft = {
   emoji: "",
   title: "  라멘 ",
   date: "2026-11-20",
-  start_time: "",
-  end_time: "",
+  startTime: "",
+  endTime: "",
   memo: "",
 };
 
@@ -56,26 +56,26 @@ describe("validateItemDraft", () => {
   it("trims the title, keeps a memo as written and nulls a blank one", () => {
     expect(validateItemDraft({ ...draft, memo: "  \n " })).toEqual({
       ok: true,
-      fields: { date: "2026-11-20", title: "라멘", memo: null, start_time: null, end_time: null, emoji: null },
+      fields: { date: "2026-11-20", title: "라멘", memo: null, startTime: null, endTime: null, emoji: null },
     });
     expect(
-      validateItemDraft({ ...draft, emoji: "✈️", memo: " 2터미널\n짐 맡기기 ", start_time: "09:00", end_time: "10:30" }),
+      validateItemDraft({ ...draft, emoji: "✈️", memo: " 2터미널\n짐 맡기기 ", startTime: "09:00", endTime: "10:30" }),
     ).toEqual({
       ok: true,
       fields: {
         date: "2026-11-20",
         title: "라멘",
         memo: " 2터미널\n짐 맡기기 ",
-        start_time: "09:00",
-        end_time: "10:30",
+        startTime: "09:00",
+        endTime: "10:30",
         emoji: "✈️",
       },
     });
   });
 
   it("allows an end time at or before the start time (the next day)", () => {
-    expect(validateItemDraft({ ...draft, start_time: "20:00", end_time: "01:00" }).ok).toBe(true);
-    expect(validateItemDraft({ ...draft, start_time: "20:00", end_time: "20:00" }).ok).toBe(true);
+    expect(validateItemDraft({ ...draft, startTime: "20:00", endTime: "01:00" }).ok).toBe(true);
+    expect(validateItemDraft({ ...draft, startTime: "20:00", endTime: "20:00" }).ok).toBe(true);
   });
 
   it("requires a title of 1 to 100 code points", () => {
@@ -90,7 +90,7 @@ describe("validateItemDraft", () => {
   });
 
   it("rejects an end time without a start time", () => {
-    expect(validateItemDraft({ ...draft, end_time: "10:00" })).toMatchObject({ ok: false, field: "time" });
+    expect(validateItemDraft({ ...draft, endTime: "10:00" })).toMatchObject({ ok: false, field: "time" });
   });
 
   it("rejects an emoji that is not a single emoji", () => {

@@ -27,10 +27,10 @@ export function dayChipDate(date: string): string {
 }
 
 /** "09:00", "09:00–10:30", or "20:00–01:00 +1"; empty when untimed. */
-export function timeLabel(item: Pick<ItemSnapshot, "start_time" | "end_time">): string {
-  if (item.start_time === null) return "";
-  if (item.end_time === null) return item.start_time;
-  return `${item.start_time}–${item.end_time}${endsNextDay(item) ? " +1" : ""}`;
+export function timeLabel(item: Pick<ItemSnapshot, "startTime" | "endTime">): string {
+  if (item.startTime === null) return "";
+  if (item.endTime === null) return item.startTime;
+  return `${item.startTime}–${item.endTime}${endsNextDay(item) ? " +1" : ""}`;
 }
 
 /** `YYYY-MM-DD` of `now` in the viewer's local timezone. */

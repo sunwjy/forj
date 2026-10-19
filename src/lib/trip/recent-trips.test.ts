@@ -172,7 +172,7 @@ describe("recent trips", () => {
 });
 
 describe("recordTripLookup", () => {
-  const renamed: TripSnapshot = { title: "오사카·교토 여행", start_date: "2026-11-20", end_date: "2026-11-24", items: [] };
+  const renamed: TripSnapshot = { title: "오사카·교토 여행", startDate: "2026-11-20", endDate: "2026-11-24", items: [] };
 
   function withOsakaAndJeju() {
     const recent = createRecentTrips(memoryStorage(), tickingClock());
@@ -199,7 +199,7 @@ describe("recordTripLookup", () => {
 
     recordTripLookup(recent, busan.token, {
       status: "found",
-      trip: { title: busan.title, start_date: busan.startDate, end_date: busan.endDate, items: [] },
+      trip: { title: busan.title, startDate: busan.startDate, endDate: busan.endDate, items: [] },
     });
 
     expect(recent.list().map((trip) => trip.token)).toEqual([busan.token]);

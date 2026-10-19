@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { addMinutes, durationMinutes, overlappingItems } from "./item-time";
 
-type Slot = { id: string; date: string; start_time: string | null; end_time: string | null };
+type Slot = { id: string; date: string; startTime: string | null; endTime: string | null };
 
-function slot(id: string, start_time: string | null, end_time: string | null, date = "2026-11-20"): Slot {
-  return { id, date, start_time, end_time };
+function slot(id: string, startTime: string | null, endTime: string | null, date = "2026-11-20"): Slot {
+  return { id, date, startTime, endTime };
 }
 
 describe("overlappingItems", () => {

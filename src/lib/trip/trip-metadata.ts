@@ -22,7 +22,7 @@ export async function tripMetadata(
   }
   if (result.status === "not_found") return "not_found";
 
-  const { title, start_date, end_date } = result.trip;
-  const description = periodLabel(start_date, end_date);
+  const { title, startDate, endDate } = result.trip;
+  const description = periodLabel(startDate, endDate);
   return { title, description, openGraph: { title, description } };
 }

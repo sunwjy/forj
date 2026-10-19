@@ -19,9 +19,9 @@ export type ItemDraft = {
   /** `YYYY-MM-DD` */
   date: string;
   /** `HH:MM` or "" */
-  start_time: string;
+  startTime: string;
   /** `HH:MM` or "" */
-  end_time: string;
+  endTime: string;
   memo: string;
 };
 
@@ -32,7 +32,7 @@ export type ItemDraftResult =
   | { ok: false; field: ItemDraftField; message: string };
 
 export function blankDraft(date: string): ItemDraft {
-  return { emoji: "", title: "", date, start_time: "", end_time: "", memo: "" };
+  return { emoji: "", title: "", date, startTime: "", endTime: "", memo: "" };
 }
 
 export function draftFromItem(item: ItemFields): ItemDraft {
@@ -40,15 +40,15 @@ export function draftFromItem(item: ItemFields): ItemDraft {
     emoji: item.emoji ?? "",
     title: item.title,
     date: item.date,
-    start_time: item.start_time ?? "",
-    end_time: item.end_time ?? "",
+    startTime: item.startTime ?? "",
+    endTime: item.endTime ?? "",
     memo: item.memo ?? "",
   };
 }
 
 export function itemFields(item: ItemSnapshot): ItemFields {
-  const { date, title, memo, start_time, end_time, emoji } = item;
-  return { date, title, memo, start_time, end_time, emoji };
+  const { date, title, memo, startTime, endTime, emoji } = item;
+  return { date, title, memo, startTime, endTime, emoji };
 }
 
 /** Lengths are counted in code points, like `char_length` on the server (spec 2.3). */
@@ -84,7 +84,7 @@ export function validateItemDraft(draft: ItemDraft): ItemDraftResult {
     return { ok: false, field: "title", message: `제목은 ${MAX_ITEM_TITLE_LENGTH}자까지 쓸 수 있어요.` };
   }
 
-  if (draft.end_time && !draft.start_time) {
+  if (draft.endTime && !draft.startTime) {
     return { ok: false, field: "time", message: "종료 시각만 둘 수는 없어요. 시작 시각을 먼저 골라 주세요." };
   }
 
@@ -100,8 +100,8 @@ export function validateItemDraft(draft: ItemDraft): ItemDraftResult {
       date: draft.date,
       title,
       memo: memo || null,
-      start_time: draft.start_time || null,
-      end_time: (draft.start_time && draft.end_time) || null,
+      startTime: draft.startTime || null,
+      endTime: (draft.startTime && draft.endTime) || null,
       emoji: emoji || null,
     },
   };
@@ -118,9 +118,9 @@ export function itemPatch(base: ItemFields, next: ItemFields): ItemPatch {
   for (const key of SINGLE_FIELDS) {
     if (next[key] !== base[key]) Object.assign(patch, { [key]: next[key] });
   }
-  if (next.start_time !== base.start_time || next.end_time !== base.end_time) {
-    patch.start_time = next.start_time;
-    patch.end_time = next.end_time;
+  if (next.startTime !== base.startTime || next.endTime !== base.endTime) {
+    patch.startTime = next.startTime;
+    patch.endTime = next.endTime;
   }
   return patch;
 }

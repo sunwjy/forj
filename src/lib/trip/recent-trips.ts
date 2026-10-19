@@ -118,7 +118,7 @@ export function createRecentTrips(storage: RecentTripsStorage | null, now: () =>
  */
 export function recordTripLookup(recent: RecentTrips, token: string, state: TripState) {
   if (state.status === "found") {
-    const { title, start_date: startDate, end_date: endDate } = state.trip;
+    const { title, startDate, endDate } = state.trip;
     recent.remember({ token, title, startDate, endDate });
   } else if (state.status === "not_found") {
     recent.forget(token);

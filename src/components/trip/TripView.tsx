@@ -42,8 +42,8 @@ const FAILED_TOAST = "저장하지 못했어요";
 
 /** The trip screen body (spec 7.3): top bar, header, day chips, timeline, item sheet. */
 export function TripView({ trip, today, writer, offline = false }: TripViewProps) {
-  const days = tripDays(trip.start_date, trip.end_date);
-  const [picked, setPicked] = useState(() => initialDay(trip.start_date, trip.end_date, today));
+  const days = tripDays(trip.startDate, trip.endDate);
+  const [picked, setPicked] = useState(() => initialDay(trip.startDate, trip.endDate, today));
   // The period can change under us (later, by someone else); fall back if the day left it.
   const selected = days.find((d) => d.date === picked) ?? days[0];
   const { timed, untimed } = dayTimeline(trip.items, selected.date);
@@ -95,7 +95,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
           {offline ? (
             <OfflineBadge />
           ) : (
-            <span className={styles.dday}>{ddayLabel(trip.start_date, trip.end_date, today)}</span>
+            <span className={styles.dday}>{ddayLabel(trip.startDate, trip.endDate, today)}</span>
           )}
         </div>
         <Button
@@ -118,7 +118,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
             <Pencil size={18} strokeWidth={2.25} />
           </Button>
         </h1>
-        <p className={`${styles.period} num`}>{periodLabel(trip.start_date, trip.end_date)}</p>
+        <p className={`${styles.period} num`}>{periodLabel(trip.startDate, trip.endDate)}</p>
       </header>
 
       {/* Day chips are tabs: arrow keys move between days, Enter or Space shows one. */}
@@ -175,7 +175,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
         onCreate={(fields) => {
           writer.submit({
             kind: "create_item",
-            item: { ...fields, id: crypto.randomUUID(), created_at: optimisticCreatedAt(new Date()) },
+            item: { ...fields, id: crypto.randomUUID(), createdAt: optimisticCreatedAt(new Date()) },
           });
           setPicked(fields.date);
         }}
@@ -195,10 +195,10 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
 type RowProps = { item: ItemSnapshot; order: number; onOpen: () => void };
 
 function TimelineRow({ item, order, onOpen }: RowProps) {
-  const untimed = item.start_time === null;
+  const untimed = item.startTime === null;
   return (
     <li className={styles.row}>
-      <div className={`${styles.time} num`}>{item.start_time}</div>
+      <div className={`${styles.time} num`}>{item.startTime}</div>
       <div className={styles.rail}>
         <span className={untimed ? `${styles.dot} ${styles.dotHollow}` : styles.dot} />
       </div>

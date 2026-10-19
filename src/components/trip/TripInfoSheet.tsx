@@ -24,7 +24,7 @@ const FAILED_TOAST = "저장하지 못했어요";
 type SheetTarget = { key: number; draft: TripDraft };
 
 function draftOf(trip: TripSnapshot): TripDraft {
-  return { title: trip.title, startDate: trip.start_date, endDate: trip.end_date };
+  return { title: trip.title, startDate: trip.startDate, endDate: trip.endDate };
 }
 
 type TripInfoSheetProps = {
@@ -58,16 +58,16 @@ export function TripInfoSheet({ trip, writer, openRequest, offline = false }: Tr
   function submitPeriod({ startDate, endDate }: Period) {
     writer.submit({
       kind: "set_trip_dates",
-      start_date: startDate,
-      end_date: endDate,
-      deleted_ids: periodChange(trip, startDate, endDate).deletedItems.map((i) => i.id),
+      startDate,
+      endDate,
+      confirmedDeletedIds: periodChange(trip, startDate, endDate).deletedItems.map((i) => i.id),
     });
   }
 
   // The store has already reverted the change (spec 6.5).
   useRejections(writer, ({ change, code }) => {
     if (change.kind === "set_trip_dates") {
-      const period = { startDate: change.start_date, endDate: change.end_date };
+      const period = { startDate: change.startDate, endDate: change.endDate };
       if (code === "DELETION_MISMATCH") {
         // The list follows the refetched snapshot, so it shows the latest items.
         setRetry(period);
@@ -233,7 +233,7 @@ function PeriodConfirmDialog({ open, trip, period, retry = false, onConfirm, onC
               <span aria-hidden>{item.emoji ?? DEFAULT_EMOJI}</span> {item.title}
               <span className={`${styles.doomedDate} num`}>
                 {dayChipDate(item.date)}
-                {item.start_time && ` · ${item.start_time}`}
+                {item.startTime && ` · ${item.startTime}`}
               </span>
             </li>
           ))}

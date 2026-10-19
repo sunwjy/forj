@@ -19,16 +19,16 @@ describe("dayChipDate", () => {
 
 describe("timeLabel", () => {
   it("shows the start time alone when there is no end time", () => {
-    expect(timeLabel({ start_time: "15:00", end_time: null })).toBe("15:00");
+    expect(timeLabel({ startTime: "15:00", endTime: null })).toBe("15:00");
   });
 
   it("shows a range, marking an end on the next day with +1", () => {
-    expect(timeLabel({ start_time: "09:00", end_time: "10:30" })).toBe("09:00–10:30");
-    expect(timeLabel({ start_time: "20:00", end_time: "01:00" })).toBe("20:00–01:00 +1");
+    expect(timeLabel({ startTime: "09:00", endTime: "10:30" })).toBe("09:00–10:30");
+    expect(timeLabel({ startTime: "20:00", endTime: "01:00" })).toBe("20:00–01:00 +1");
   });
 
   it("is empty for an untimed item", () => {
-    expect(timeLabel({ start_time: null, end_time: null })).toBe("");
+    expect(timeLabel({ startTime: null, endTime: null })).toBe("");
   });
 });
 

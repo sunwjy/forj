@@ -44,16 +44,16 @@ function item(id: string, overrides: Partial<ItemSnapshot> = {}): ItemSnapshot {
     date: "2026-11-20",
     title: id,
     memo: null,
-    start_time: null,
-    end_time: null,
+    startTime: null,
+    endTime: null,
     emoji: null,
-    created_at: "2026-10-17T00:00:00.000000Z",
+    createdAt: "2026-10-17T00:00:00.000000Z",
     ...overrides,
   };
 }
 
 function trip(items: ItemSnapshot[]): TripSnapshot {
-  return { title: "후쿠오카", start_date: "2026-11-20", end_date: "2026-11-22", items };
+  return { title: "후쿠오카", startDate: "2026-11-20", endDate: "2026-11-22", items };
 }
 
 function shownTitles(store: ReturnType<typeof createTripStore>): string[] {
@@ -241,14 +241,14 @@ describe("trip store", () => {
 
   it("restores the period and its items when a period change is rejected", async () => {
     const { store, sends, rejections } = await loaded([item("a"), item("b", { date: "2026-11-22" })]);
-    const change: TripChange = { kind: "set_trip_dates", start_date: "2026-11-20", end_date: "2026-11-21", deleted_ids: ["b"] };
+    const change: TripChange = { kind: "set_trip_dates", startDate: "2026-11-20", endDate: "2026-11-21", confirmedDeletedIds: ["b"] };
     store.submit(change);
-    expect(store.getState().trip).toMatchObject({ trip: { end_date: "2026-11-21" } });
+    expect(store.getState().trip).toMatchObject({ trip: { endDate: "2026-11-21" } });
     expect(shownTitles(store)).toEqual(["a"]);
 
     sends[0].answer.resolve({ kind: "rejected", code: "DELETION_MISMATCH" });
     await flush();
-    expect(store.getState().trip).toMatchObject({ trip: { end_date: "2026-11-22" } });
+    expect(store.getState().trip).toMatchObject({ trip: { endDate: "2026-11-22" } });
     expect(shownTitles(store)).toEqual(["a", "b"]);
     expect(rejections).toEqual([{ change, code: "DELETION_MISMATCH", item: undefined }]);
   });

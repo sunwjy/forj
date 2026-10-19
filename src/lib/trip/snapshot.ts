@@ -1,7 +1,8 @@
 /**
- * The shape `get_trip` returns (spec 5.3). The browser's local state is this
- * server snapshot plus a queue of pending changes (spec 6.2), so later work
- * (edit queue, realtime refetch, link previews) builds on these types.
+ * A trip as the client holds it: what `get_trip` returns (spec 5.3), with its
+ * field names in camelCase (`fetchTrip` converts them). The browser's local
+ * state is this server snapshot plus a queue of pending changes (spec 6.2), so
+ * later work (edit queue, realtime refetch, link previews) builds on these types.
  */
 
 export type ItemSnapshot = {
@@ -12,23 +13,23 @@ export type ItemSnapshot = {
   title: string;
   memo: string | null;
   /** `HH:MM`, local time with no timezone. `null` means "시간 미정". */
-  start_time: string | null;
-  /** `HH:MM`. Only set when `start_time` is; `<= start_time` means the next day. */
-  end_time: string | null;
+  startTime: string | null;
+  /** `HH:MM`. Only set when `startTime` is; `<= startTime` means the next day. */
+  endTime: string | null;
   emoji: string | null;
   /**
    * UTC timestamp with microseconds, always `YYYY-MM-DDTHH:MM:SS.ffffffZ`,
    * so plain string comparison orders it the same way Postgres does.
    */
-  created_at: string;
+  createdAt: string;
 };
 
 export type TripSnapshot = {
   title: string;
   /** `YYYY-MM-DD` */
-  start_date: string;
+  startDate: string;
   /** `YYYY-MM-DD` */
-  end_date: string;
-  /** Ordered by `date, start_time nulls last, created_at, id` (spec 2.4). */
+  endDate: string;
+  /** Ordered by `date, startTime nulls last, createdAt, id` (spec 2.4). */
   items: ItemSnapshot[];
 };
