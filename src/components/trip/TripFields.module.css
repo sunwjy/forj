@@ -1,0 +1,75 @@
+.field {
+  display: grid;
+  gap: 6px;
+  padding: 8px 0;
+  min-width: 0;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  /* 16px keeps iOS Safari from zooming on focus. */
+  font-size: 16px;
+}
+
+/* Half-width date and time inputs need the room for their value and picker icon. */
+.field input[type="date"] {
+  padding-inline: 10px;
+}
+
+/* iOS Safari gives date and time inputs a wide intrinsic size that ignores
+   width: 100%, so two of them side by side overflow into each other. */
+@supports (-webkit-touch-callout: none) {
+  .field input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .field input::-webkit-date-and-time-value {
+    text-align: left;
+  }
+}
+
+.field input:focus {
+  border-color: var(--primary-strong);
+  outline: none;
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--primary-strong);
+}
+
+.row {
+  display: grid;
+  /* Side by side while each column fits its value and picker icon; stacked
+     on narrower screens. A date input shows nothing useful when squeezed. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 10px;
+}
+
+/* A note spanning both date columns (spec 7.7). */
+.rowNote {
+  grid-column: 1 / -1;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.error {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary-strong);
+}

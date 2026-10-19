@@ -6,7 +6,7 @@ import { BottomSheet } from "@/components/BottomSheet";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { showToast } from "@/components/toast";
 import { TripFields, type TripFieldsError } from "./TripFields";
-import formStyles from "@/components/home/TripCreateForm.module.css";
+import fieldStyles from "./TripFields.module.css";
 import { validateTripInput, type Period, type TripDraft } from "@/lib/trip/trip-input";
 import { dayChipDate } from "@/lib/trip/format";
 import { periodChange } from "@/lib/trip/period-change";
@@ -158,7 +158,7 @@ function TripInfoForm({ trip, draft: initial, offline, onSave }: TripInfoFormPro
   }
 
   return (
-    <form className={formStyles.form} onSubmit={handleSubmit} noValidate>
+    <form className={styles.form} onSubmit={handleSubmit} noValidate>
       {offline && (
         <p>
           <OfflineBadge />
@@ -171,8 +171,8 @@ function TripInfoForm({ trip, draft: initial, offline, onSave }: TripInfoFormPro
         error={error}
         remote={marks}
       />
-      <p className={formStyles.hint}>기간을 줄이면 빠지는 날짜의 일정이 함께 삭제돼요. 저장하기 전에 한 번 더 확인해요.</p>
-      <Button type="submit" className={formStyles.submit}>
+      <p className={fieldStyles.hint}>기간을 줄이면 빠지는 날짜의 일정이 함께 삭제돼요. 저장하기 전에 한 번 더 확인해요.</p>
+      <Button type="submit" className={styles.submit}>
         저장
       </Button>
       <PeriodConfirmDialog
