@@ -302,12 +302,14 @@
 ### 9.3 CI
 
 - PR마다 lint, typecheck, `next build`, Vitest 단위 테스트, pgTAP 테스트를 실행하고, 모두 통과해야 merge할 수 있습니다.
+- 9.4에서 배포하지 않는 파일만 바뀐 경우(`deploy.yml` 포함, `ci.yml` 제외)에는 각 check를 건너뜁니다. 건너뛴 check는 통과로 처리되므로 merge가 막히지 않습니다.
 - pgTAP 테스트는 `supabase/tests/`에 두고 `supabase start` → `supabase db reset` → `supabase test db` 순서로 실행합니다. anon이 `private` schema에 직접 접근할 수 없다는 점과, RPC가 정해진 오류 코드를 내는 점을 검증합니다.
 - Vitest는 DB 밖의 순수 로직(queue rebase, 바뀐 필드 계산, 정렬과 "시간 미정" 분류, 최근 여행 목록 관리, 입력 검증)을 검증합니다. E2E 테스트는 두지 않습니다.
 
 ### 9.4 배포
 
 - `main`에 push되면 GitHub Actions가 `supabase db push`를 실행하고, 성공한 경우에만 Vercel Deploy Hook을 호출합니다.
+- 문서(`*.md`, `docs/`), `.claude/`, `.env.example`, `scripts/`, 그리고 배포와 무관한 workflow(`ci.yml`, `daily.yml`)만 바뀐 push는 배포하지 않습니다. 필요하면 `workflow_dispatch`로 수동 실행합니다.
 
 ### 9.5 환경 변수와 secret
 

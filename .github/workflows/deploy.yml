@@ -6,6 +6,17 @@ name: Deploy
 on:
   push:
     branches: [main]
+    # Changes that never reach the deployed app don't redeploy. A push that
+    # mixes these with any other file still deploys. ci.yml's `changes` job
+    # mirrors this list.
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".claude/**"
+      - ".env.example"
+      - "scripts/**"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/daily.yml"
   workflow_dispatch:
 
 permissions:
