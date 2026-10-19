@@ -1,4 +1,4 @@
-# PR checks (spec 9.3). Every job here is a required status check on main.
+# PR checks (spec 9.3). Every job but `changes` is a required status check on main.
 name: CI
 
 on:
@@ -14,7 +14,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Required checks can't use paths-ignore: a workflow that never runs leaves
+  # them pending. Instead every check depends on this job and is skipped
+  # (which counts as passing) when only docs or tooling changed. Keep the
+  # pattern in step with the paths-ignore list in deploy.yml.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          # A new branch has no usable base; check everything.
+          if ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only "$BASE" HEAD \
+            | grep -Ev '\.md$|^(docs|\.claude|scripts)/|^\.env\.example$|^\.github/workflows/(daily|deploy)\.yml$' \
+            | grep -q .; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
   lint:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -27,6 +58,8 @@ jobs:
       - run: pnpm lint
 
   typecheck:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -39,6 +72,8 @@ jobs:
       - run: pnpm typecheck
 
   build:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -54,6 +89,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH
 
   test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -66,6 +103,8 @@ jobs:
       - run: pnpm test
 
   pgtap:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
