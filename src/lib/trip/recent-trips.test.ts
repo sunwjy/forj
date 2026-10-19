@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { createRecentTrips, forgetTripAtPath, recordTripLookup, type RecentTripsStorage } from "./recent-trips";
+import {
+  createRecentTrips,
+  forgetTripAtPath,
+  recordTripLookup,
+  type RecentTripInput,
+  type RecentTripsStorage,
+} from "./recent-trips";
 import type { TripSnapshot } from "./snapshot";
+import { isoDate, shareToken } from "./test-values";
 
 /** An in-memory stand-in for `localStorage`. */
 function memoryStorage(initial: Record<string, string> = {}): RecentTripsStorage & { data: Record<string, string> } {
@@ -24,9 +31,13 @@ function tickingClock(start = Date.UTC(2026, 9, 17, 9, 0)) {
   };
 }
 
-const osaka = { token: "osakaTrip0000000000000", title: "오사카 먹방 여행", startDate: "2026-11-20", endDate: "2026-11-23" };
-const jeju = { token: "jejuTrip00000000000000", title: "제주 가족 여행", startDate: "2026-12-01", endDate: "2026-12-03" };
-const busan = { token: "busanTrip0000000000000", title: "부산 당일치기", startDate: "2027-01-09", endDate: "2027-01-09" };
+function trip(token: string, title: string, startDate: string, endDate: string): RecentTripInput {
+  return { token: shareToken(token), title, startDate: isoDate(startDate), endDate: isoDate(endDate) };
+}
+
+const osaka = trip("osakaTrip0000000000000", "오사카 먹방 여행", "2026-11-20", "2026-11-23");
+const jeju = trip("jejuTrip00000000000000", "제주 가족 여행", "2026-12-01", "2026-12-03");
+const busan = trip("busanTrip0000000000000", "부산 당일치기", "2027-01-09", "2027-01-09");
 
 describe("recent trips", () => {
   it("starts empty", () => {
@@ -65,7 +76,7 @@ describe("recent trips", () => {
     first.remember(jeju);
     // A day later someone renamed the trip and moved its end date.
     const second = createRecentTrips(storage, () => Date.UTC(2026, 9, 18, 21, 30));
-    second.remember({ ...osaka, title: "오사카·교토 여행", endDate: "2026-11-24" });
+    second.remember({ ...osaka, title: "오사카·교토 여행", endDate: isoDate("2026-11-24") });
 
     expect(second.list()).toEqual([
       { token: osaka.token, title: "오사카·교토 여행", startDate: "2026-11-20", endDate: "2026-11-24", openedAt: Date.UTC(2026, 9, 18, 21, 30) },
@@ -77,7 +88,7 @@ describe("recent trips", () => {
     const storage = memoryStorage();
     const recent = createRecentTrips(storage, tickingClock());
     for (let n = 1; n <= 51; n++) {
-      recent.remember({ ...osaka, token: `trip${String(n).padStart(18, "0")}`, title: `여행 ${n}` });
+      recent.remember({ ...osaka, token: shareToken(`trip${String(n).padStart(18, "0")}`), title: `여행 ${n}` });
     }
 
     const titles = recent.list().map((trip) => trip.title);
@@ -157,6 +168,20 @@ describe("recent trips", () => {
     expect(createRecentTrips(mixed).list()).toEqual([valid]);
   });
 
+  it("ignores stored trips whose token or dates are malformed", () => {
+    const valid = { ...jeju, openedAt: 1 };
+    const storage = memoryStorage({
+      "forj.recentTrips": JSON.stringify([
+        valid,
+        { ...osaka, token: "not a token", openedAt: 2 },
+        { ...osaka, startDate: "2026-02-30", openedAt: 3 },
+        { ...osaka, endDate: "11/23/2026", openedAt: 4 },
+      ]),
+    });
+
+    expect(createRecentTrips(storage).list()).toEqual([valid]);
+  });
+
   it("tells subscribers when the list changes", () => {
     const recent = createRecentTrips(memoryStorage(), tickingClock());
     const seen: string[][] = [];
@@ -172,7 +197,7 @@ describe("recent trips", () => {
 });
 
 describe("recordTripLookup", () => {
-  const renamed: TripSnapshot = { title: "오사카·교토 여행", startDate: "2026-11-20", endDate: "2026-11-24", items: [] };
+  const renamed: TripSnapshot = { title: "오사카·교토 여행", startDate: isoDate("2026-11-20"), endDate: isoDate("2026-11-24"), items: [] };
 
   function withOsakaAndJeju() {
     const recent = createRecentTrips(memoryStorage(), tickingClock());

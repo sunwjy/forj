@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
 import { createTrip } from "@/lib/trip/create-trip";
 import { getSupabase } from "@/lib/supabase";
-import { validateTripInput, type TripDraft } from "@/lib/trip/trip-input";
+import type { ShareToken } from "@/lib/trip/branded";
+import { validateTripInput, type TripInput } from "@/lib/trip/trip-input";
 import { showToast } from "@/components/toast";
 import { TripFields, type TripFieldsError } from "@/components/trip/TripFields";
 import styles from "./TripCreateForm.module.css";
 
-export type CreatedTrip = TripDraft & { token: string };
+export type CreatedTrip = TripInput & { token: ShareToken };
 
 type TripCreateFormProps = {
   /** Runs after the trip exists and before navigating to it, e.g. to remember it as a recent trip. */

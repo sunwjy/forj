@@ -1,3 +1,4 @@
+import type { IsoDate } from "./branded";
 import type { ItemSnapshot } from "./snapshot";
 
 type Sortable = Pick<ItemSnapshot, "id" | "date" | "startTime" | "createdAt">;
@@ -35,7 +36,7 @@ export type DayTimeline<T> = {
 };
 
 /** One day's items, split into the timeline and the "시간 미정" group. */
-export function dayTimeline<T extends Sortable>(items: readonly T[], date: string): DayTimeline<T> {
+export function dayTimeline<T extends Sortable>(items: readonly T[], date: IsoDate): DayTimeline<T> {
   const ofDay = sortItems(items.filter((i) => i.date === date));
   return {
     timed: ofDay.filter((i) => i.startTime !== null),

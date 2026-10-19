@@ -3,6 +3,7 @@
 import { Button } from "@base-ui/react/button";
 import Link from "next/link";
 import { use, useEffect } from "react";
+import { parseShareToken, type ShareToken } from "@/lib/trip/branded";
 import { recordTripLookup } from "@/lib/trip/recent-trips";
 import { localDate } from "@/lib/trip/format";
 import { useTrip } from "@/lib/trip/use-trip";
@@ -14,7 +15,12 @@ import styles from "./trip.module.css";
 
 /** `/t/<token>`: loads the trip and picks the screen for its state. */
 export function TripScreen({ params }: { params: Promise<{ token: string }> }) {
-  const { token } = use(params);
+  // No trip has a token of another shape, so there is nothing to look up.
+  const token = parseShareToken(use(params).token);
+  return token ? <TripLoader token={token} /> : <TripNotFound />;
+}
+
+function TripLoader({ token }: { token: ShareToken }) {
   const { state, reload, writer, stalled } = useTrip(token);
   const { disconnected } = useTripSignals(token, reload);
 

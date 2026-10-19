@@ -3,19 +3,23 @@
  * repeats them in `create_trip`; this only gives the form early feedback.
  */
 
+import { parseIsoDate, type IsoDate } from "./branded";
 import { daysBetween } from "./days";
 
 export const MAX_TITLE_LENGTH = 100;
 export const MAX_PERIOD_DAYS = 30;
 
-/** A trip's start and end dates, `YYYY-MM-DD`, both included. */
-export type Period = { startDate: string; endDate: string };
+/** A trip's start and end dates, both included. */
+export type Period = { startDate: IsoDate; endDate: IsoDate };
 
-/** A trip's title and period as typed; a date is "" when not chosen. */
-export type TripDraft = { title: string } & Period;
+/** A trip's title and period as typed: `YYYY-MM-DD`, or "" when not chosen. */
+export type TripDraft = { title: string; startDate: string; endDate: string };
+
+/** A draft that passed `validateTripInput`. */
+export type TripInput = { title: string } & Period;
 
 export type TripInputResult =
-  | { ok: true; value: TripDraft }
+  | { ok: true; value: TripInput }
   | { ok: false; field: "title" | "period"; message: string };
 
 export function validateTripInput(draft: TripDraft): TripInputResult {
@@ -28,14 +32,12 @@ export function validateTripInput(draft: TripDraft): TripInputResult {
     return { ok: false, field: "title", message: `여행 제목은 ${MAX_TITLE_LENGTH}자까지 쓸 수 있어요.` };
   }
 
-  const { startDate, endDate } = draft;
+  const startDate = parseIsoDate(draft.startDate);
+  const endDate = parseIsoDate(draft.endDate);
   if (!startDate || !endDate) {
     return { ok: false, field: "period", message: "시작일과 종료일을 골라 주세요." };
   }
   const days = daysBetween(startDate, endDate) + 1;
-  if (Number.isNaN(days)) {
-    return { ok: false, field: "period", message: "시작일과 종료일을 골라 주세요." };
-  }
   if (days < 1) {
     return { ok: false, field: "period", message: "종료일은 시작일보다 앞설 수 없어요." };
   }

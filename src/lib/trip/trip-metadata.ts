@@ -1,6 +1,7 @@
 import type { RpcClient } from "@/lib/rpc";
 import type { Metadata } from "next";
 import { getSupabase } from "@/lib/supabase";
+import type { ShareToken } from "./branded";
 import { fetchTrip } from "./fetch-trip";
 import { periodLabel } from "./format";
 
@@ -11,7 +12,7 @@ import { periodLabel } from "./format";
  * generic preview applies and the page still renders; the browser retries.
  */
 export async function tripMetadata(
-  token: string,
+  token: ShareToken,
   client: RpcClient = getSupabase(),
 ): Promise<Metadata | "not_found"> {
   let result;

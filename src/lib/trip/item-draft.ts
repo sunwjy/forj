@@ -4,6 +4,7 @@
  * every check except the grapheme one (spec 5.4).
  */
 
+import { parseHhMm, parseIsoDate, type IsoDate } from "./branded";
 import type { ItemFields, ItemPatch } from "./changes";
 import type { ItemSnapshot } from "./snapshot";
 
@@ -12,7 +13,7 @@ export const MAX_MEMO_LENGTH = 2000;
 /** The server's cap on the emoji field, in code points (spec 5.4). */
 export const MAX_EMOJI_CODE_POINTS = 16;
 
-/** The sheet's form state. Empty optional fields are "". */
+/** The sheet's form state, as typed. Empty optional fields are "". */
 export type ItemDraft = {
   emoji: string;
   title: string;
@@ -25,13 +26,13 @@ export type ItemDraft = {
   memo: string;
 };
 
-export type ItemDraftField = "emoji" | "title" | "time" | "memo";
+export type ItemDraftField = "emoji" | "title" | "date" | "time" | "memo";
 
 export type ItemDraftResult =
   | { ok: true; fields: ItemFields }
   | { ok: false; field: ItemDraftField; message: string };
 
-export function blankDraft(date: string): ItemDraft {
+export function blankDraft(date: IsoDate): ItemDraft {
   return { emoji: "", title: "", date, startTime: "", endTime: "", memo: "" };
 }
 
@@ -84,8 +85,18 @@ export function validateItemDraft(draft: ItemDraft): ItemDraftResult {
     return { ok: false, field: "title", message: `제목은 ${MAX_ITEM_TITLE_LENGTH}자까지 쓸 수 있어요.` };
   }
 
+  const date = parseIsoDate(draft.date);
+  if (!date) {
+    return { ok: false, field: "date", message: "일차를 골라 주세요." };
+  }
+
   if (draft.endTime && !draft.startTime) {
     return { ok: false, field: "time", message: "종료 시각만 둘 수는 없어요. 시작 시각을 먼저 골라 주세요." };
+  }
+  const startTime = draft.startTime ? parseHhMm(draft.startTime) : null;
+  const endTime = draft.endTime ? parseHhMm(draft.endTime) : null;
+  if ((draft.startTime && !startTime) || (draft.endTime && !endTime)) {
+    return { ok: false, field: "time", message: "시각을 다시 골라 주세요." };
   }
 
   // A memo is stored as written; only a blank one becomes null (spec 5.4).
@@ -97,11 +108,11 @@ export function validateItemDraft(draft: ItemDraft): ItemDraftResult {
   return {
     ok: true,
     fields: {
-      date: draft.date,
+      date,
       title,
       memo: memo || null,
-      startTime: draft.startTime || null,
-      endTime: (draft.startTime && draft.endTime) || null,
+      startTime,
+      endTime,
       emoji: emoji || null,
     },
   };

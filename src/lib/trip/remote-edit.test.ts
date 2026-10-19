@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 import type { ItemFields } from "./changes";
 import { draftFromItem, itemPatch, validateItemDraft } from "./item-draft";
 import { mergeRemoteFields, mergeRemoteItem } from "./remote-edit";
+import { hhMm, isoDate } from "./test-values";
 
 const opened: ItemFields = {
-  date: "2026-11-20",
+  date: isoDate("2026-11-20"),
   title: "라멘",
   memo: null,
-  startTime: "12:00",
-  endTime: "13:00",
+  startTime: hhMm("12:00"),
+  endTime: hhMm("13:00"),
   emoji: "🍜",
 };
 

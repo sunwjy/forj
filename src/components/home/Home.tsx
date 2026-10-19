@@ -4,6 +4,7 @@ import { Button } from "@base-ui/react/button";
 import { Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import type { ShareToken } from "@/lib/trip/branded";
 import { periodLabel } from "@/lib/trip/format";
 import { getRecentTrips, useRecentTrips } from "@/lib/trip/use-recent-trips";
 import { showToast } from "@/components/toast";
@@ -46,7 +47,7 @@ export function Home() {
     );
   }
 
-  function forget(token: string) {
+  function forget(token: ShareToken) {
     const recent = getRecentTrips();
     const forgotten = recent.forget(token);
     if (!forgotten) return;

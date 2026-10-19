@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { ItemFields } from "./changes";
 import { isSingleEmoji, itemPatch, validateItemDraft, type ItemDraft } from "./item-draft";
+import { hhMm, isoDate } from "./test-values";
 
 const base: ItemFields = {
-  date: "2026-11-20",
+  date: isoDate("2026-11-20"),
   title: "라멘",
   memo: "줄 서기",
-  startTime: "12:00",
-  endTime: "13:00",
+  startTime: hhMm("12:00"),
+  endTime: hhMm("13:00"),
   emoji: "🍜",
 };
 
@@ -21,18 +22,18 @@ describe("itemPatch", () => {
       title: "돈코츠 라멘",
       emoji: null,
     });
-    expect(itemPatch(base, { ...base, date: "2026-11-21", memo: null })).toEqual({
+    expect(itemPatch(base, { ...base, date: isoDate("2026-11-21"), memo: null })).toEqual({
       date: "2026-11-21",
       memo: null,
     });
   });
 
   it("sends the start and end times together when only one of them changed", () => {
-    expect(itemPatch(base, { ...base, endTime: "14:00" })).toEqual({
+    expect(itemPatch(base, { ...base, endTime: hhMm("14:00") })).toEqual({
       startTime: "12:00",
       endTime: "14:00",
     });
-    expect(itemPatch(base, { ...base, startTime: "11:00" })).toEqual({
+    expect(itemPatch(base, { ...base, startTime: hhMm("11:00") })).toEqual({
       startTime: "11:00",
       endTime: "13:00",
     });
@@ -95,6 +96,19 @@ describe("validateItemDraft", () => {
 
   it("rejects an emoji that is not a single emoji", () => {
     expect(validateItemDraft({ ...draft, emoji: "🍜🍣" })).toMatchObject({ ok: false, field: "emoji" });
+  });
+
+  it("rejects a date that is not a real YYYY-MM-DD date", () => {
+    expect(validateItemDraft({ ...draft, date: "" })).toMatchObject({ ok: false, field: "date" });
+    expect(validateItemDraft({ ...draft, date: "2026-02-30" })).toMatchObject({ ok: false, field: "date" });
+  });
+
+  it("rejects a start or end time that is not HH:MM", () => {
+    expect(validateItemDraft({ ...draft, startTime: "9:00" })).toMatchObject({ ok: false, field: "time" });
+    expect(validateItemDraft({ ...draft, startTime: "09:00", endTime: "24:00" })).toMatchObject({
+      ok: false,
+      field: "time",
+    });
   });
 });
 

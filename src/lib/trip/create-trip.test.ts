@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createTrip } from "./create-trip";
 import type { RpcClient } from "@/lib/rpc";
+import { isoDate } from "./test-values";
 
-const input = { title: "오사카", startDate: "2026-11-20", endDate: "2026-11-23" };
+const input = { title: "오사카", startDate: isoDate("2026-11-20"), endDate: isoDate("2026-11-23") };
 
 /** A stand-in for the Supabase client at the network boundary. */
 function stubClient(result: { data: unknown; error: unknown }) {

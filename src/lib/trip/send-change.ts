@@ -1,4 +1,5 @@
 import { rpcErrorCode, type RpcClient } from "@/lib/rpc";
+import type { ShareToken } from "./branded";
 import { changeKind, type TripChange } from "./changes";
 
 /**
@@ -29,7 +30,7 @@ function serverArgs(args: Record<string, unknown>): Record<string, unknown> {
 }
 
 /** Sends one change through its RPC (spec 5.3) and classifies the result. */
-export async function sendChange(client: RpcClient, token: string, change: TripChange): Promise<SendOutcome> {
+export async function sendChange(client: RpcClient, token: ShareToken, change: TripChange): Promise<SendOutcome> {
   const { name, args } = changeKind(change).rpc(change);
   let response: Awaited<ReturnType<RpcClient["rpc"]>>;
   try {

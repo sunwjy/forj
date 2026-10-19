@@ -6,6 +6,7 @@ import { ArrowLeft, LinkIcon, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { showToast } from "@/components/toast";
+import type { IsoDate } from "@/lib/trip/branded";
 import { changedItemId, optimisticCreatedAt } from "@/lib/trip/changes";
 import { type Day, ddayLabel, initialDay, tripDays } from "@/lib/trip/days";
 import { dayChipDate, periodLabel, timeLabel } from "@/lib/trip/format";
@@ -30,7 +31,7 @@ type TripViewProps = {
   /** The rebased view: server snapshot plus pending changes. */
   trip: TripSnapshot;
   /** `YYYY-MM-DD` in the viewer's local calendar. */
-  today: string;
+  today: IsoDate;
   writer: TripWriter;
   /** The realtime channel is down or changes have failed to send for a while (spec 6.3, 7.7). */
   offline?: boolean;
@@ -47,6 +48,12 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
   // The period can change under us (later, by someone else); fall back if the day left it.
   const selected = days.find((d) => d.date === picked) ?? days[0];
   const { timed, untimed } = dayTimeline(trip.items, selected.date);
+
+  /** Selects the day chip whose value is `value`, one of the trip's dates. */
+  function pickDay(value: string) {
+    const day = days.find((d) => d.date === value);
+    if (day) setPicked(day.date);
+  }
 
   const [sheet, setSheet] = useState<ItemSheetTarget | null>(null);
   const sheetKey = useRef(0);
@@ -122,7 +129,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
       </header>
 
       {/* Day chips are tabs: arrow keys move between days, Enter or Space shows one. */}
-      <Tabs.Root value={selected.date} onValueChange={(date: string) => setPicked(date)}>
+      <Tabs.Root value={selected.date} onValueChange={(value: string) => pickDay(value)}>
         <Tabs.List className={styles.chips} aria-label="일차">
           {days.map((day) => (
             <Tabs.Tab key={day.date} value={day.date} className={`${styles.chip} ${dayClass(day)}`}>

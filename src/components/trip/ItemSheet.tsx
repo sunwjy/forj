@@ -7,6 +7,7 @@ import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { useId, useState, type FormEvent } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { parseHhMm, parseIsoDate } from "@/lib/trip/branded";
 import type { ItemFields, ItemPatch } from "@/lib/trip/changes";
 import type { Day } from "@/lib/trip/days";
 import { dayChipDate, timeLabel } from "@/lib/trip/format";
@@ -121,12 +122,13 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
 
   const set = <K extends keyof ItemDraft>(key: K, value: ItemDraft[K]) => setDraft((d) => ({ ...d, [key]: value }));
 
+  // The form holds what was typed; only well-formed values feed the live hints.
+  const date = parseIsoDate(draft.date);
+  const startTime = parseHhMm(draft.startTime);
+  const endTime = parseHhMm(draft.endTime);
   const overlaps =
-    draft.startTime && draft.endTime
-      ? overlappingItems(
-          { id: editing ? target.id : "", date: draft.date, startTime: draft.startTime, endTime: draft.endTime },
-          items,
-        )
+    date && startTime && endTime
+      ? overlappingItems({ id: editing ? target.id : "", date, startTime, endTime }, items)
       : [];
   const notice = overlapNotice(overlaps);
 
@@ -225,7 +227,7 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
         <RemoteNote mark={remote("title")} />
       </Field.Root>
 
-      <Field.Root className={fieldClass(remote("date"))}>
+      <Field.Root invalid={invalid("date")} className={fieldClass(remote("date"))}>
         <Field.Label>일차</Field.Label>
         {/* A native select keeps the phone's own picker. */}
         <Field.Control
@@ -239,6 +241,7 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
             </option>
           ))}
         </Field.Control>
+        {fieldError("date")}
         <RemoteNote mark={remote("date")} />
       </Field.Root>
 
@@ -275,22 +278,22 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
             {error?.message}
           </p>
         )}
-        {draft.startTime && (
+        {startTime && (
           <div className={styles.durations}>
             <span className={styles.durationLabel}>
-              {draft.endTime
-                ? `소요 ${durationLabel(durationMinutes(draft.startTime, draft.endTime))}${
-                    draft.endTime <= draft.startTime ? " · 다음 날 끝나요" : ""
+              {endTime
+                ? `소요 ${durationLabel(durationMinutes(startTime, endTime))}${
+                    endTime <= startTime ? " · 다음 날 끝나요" : ""
                   }`
                 : "소요 시간"}
             </span>
             <ToggleGroup
               className={styles.durationGroup}
               aria-label="소요 시간"
-              value={DURATIONS.filter((minutes) => draft.endTime === addMinutes(draft.startTime, minutes)).map(String)}
+              value={DURATIONS.filter((minutes) => endTime === addMinutes(startTime, minutes)).map(String)}
               onValueChange={(value) => {
                 // Pressing the current duration again keeps it rather than clearing the end time.
-                if (value[0]) set("endTime", addMinutes(draft.startTime, Number(value[0])));
+                if (value[0]) set("endTime", addMinutes(startTime, Number(value[0])));
               }}
             >
               {DURATIONS.map((minutes) => (

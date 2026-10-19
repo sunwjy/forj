@@ -2,6 +2,7 @@ import type { RpcClient } from "@/lib/rpc";
 import { describe, expect, it } from "vitest";
 import { sendChange } from "./send-change";
 import type { ItemSnapshot } from "./snapshot";
+import { hhMm, isoDate, shareToken } from "./test-values";
 
 type Response = { data: unknown; error: unknown; status: number };
 
@@ -24,14 +25,14 @@ function clientAnswering(answer: () => Response | Promise<Response>) {
 }
 
 const ok = () => ({ data: null, error: null, status: 204 });
-const token = "devExampleTrip00000000";
+const token = shareToken("devExampleTrip00000000");
 
 const item: ItemSnapshot = {
   id: "00000000-0000-4000-8000-000000000999",
-  date: "2026-11-20",
+  date: isoDate("2026-11-20"),
   title: "라멘",
   memo: null,
-  startTime: "12:00",
+  startTime: hhMm("12:00"),
   endTime: null,
   emoji: "🍜",
   createdAt: "2026-10-17T00:00:00.000000Z",
@@ -71,7 +72,7 @@ describe("sendChange", () => {
     await sendChange(client, token, {
       kind: "update_item",
       id: item.id,
-      patch: { date: "2026-11-21", startTime: "23:00", endTime: "01:00", emoji: null },
+      patch: { date: isoDate("2026-11-21"), startTime: hhMm("23:00"), endTime: hhMm("01:00"), emoji: null },
     });
     expect(calls).toEqual([
       {
@@ -102,8 +103,8 @@ describe("sendChange", () => {
     const { client, calls } = clientAnswering(ok);
     await sendChange(client, token, {
       kind: "set_trip_dates",
-      startDate: "2026-11-20",
-      endDate: "2026-11-21",
+      startDate: isoDate("2026-11-20"),
+      endDate: isoDate("2026-11-21"),
       confirmedDeletedIds: [item.id],
     });
     expect(calls).toEqual([

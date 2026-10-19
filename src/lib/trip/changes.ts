@@ -1,3 +1,4 @@
+import type { IsoDate } from "./branded";
 import type { ItemSnapshot, TripSnapshot } from "./snapshot";
 import { sortItems } from "./timeline";
 
@@ -24,7 +25,7 @@ export type TripChange =
    * `confirmedDeletedIds` are the items the user confirmed would go with the
    * dates that leave the trip (spec 2.6); the server refuses if they differ.
    */
-  | { kind: "set_trip_dates"; startDate: string; endDate: string; confirmedDeletedIds: string[] };
+  | { kind: "set_trip_dates"; startDate: IsoDate; endDate: IsoDate; confirmedDeletedIds: string[] };
 
 /** Everything the client does differently for one kind of change. */
 export type ChangeKind<C extends TripChange> = {
