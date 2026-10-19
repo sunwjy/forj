@@ -30,6 +30,7 @@
 .field select,
 .field textarea {
   width: 100%;
+  min-width: 0;
   min-height: 48px;
   padding: 12px 14px;
   border-radius: var(--r-sm);
@@ -37,6 +38,26 @@
   border: 2px solid var(--line);
   /* 16px keeps iOS Safari from zooming on focus. */
   font-size: 16px;
+}
+
+/* Half-width date and time inputs need the room for their value and picker icon. */
+.field input[type="date"],
+.field input[type="time"] {
+  padding-inline: 10px;
+}
+
+/* iOS Safari gives date and time inputs a wide intrinsic size that ignores
+   width: 100%, so two of them side by side overflow into each other. */
+@supports (-webkit-touch-callout: none) {
+  .field input[type="date"],
+  .field input[type="time"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .field input::-webkit-date-and-time-value {
+    text-align: left;
+  }
 }
 
 .field textarea {
@@ -65,7 +86,9 @@
 
 .row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Side by side while each column fits its value and picker icon; stacked
+     on narrower screens. A time input shows nothing useful when squeezed. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
   gap: 10px;
 }
 
