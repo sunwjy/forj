@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@base-ui/react/button";
 import { Tabs } from "@base-ui/react/tabs";
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -96,27 +97,25 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
             <span className={styles.dday}>{ddayLabel(trip.start_date, trip.end_date, today)}</span>
           )}
         </div>
-        <button
-          type="button"
+        <Button
           className={styles.iconButton}
           aria-label="공유 링크 복사"
           onClick={() => copyShareLink(window.location.href, navigator.clipboard)}
         >
           🔗
-        </button>
+        </Button>
       </div>
 
       <header className={styles.head}>
         <h1 className={styles.title}>
           {trip.title}
-          <button
-            type="button"
+          <Button
             className={styles.editTrip}
             aria-label="여행 정보 수정"
             onClick={() => setTripInfoRequest((n) => n + 1)}
           >
             ✏️
-          </button>
+          </Button>
         </h1>
         <p className={`${styles.period} num`}>{periodLabel(trip.start_date, trip.end_date)}</p>
       </header>
@@ -161,9 +160,9 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
         </Tabs.Panel>
       </Tabs.Root>
 
-      <button type="button" className={styles.fab} onClick={() => openNew(blankDraft(selected.date))}>
+      <Button className={styles.fab} onClick={() => openNew(blankDraft(selected.date))}>
         ＋ 일정 추가
-      </button>
+      </Button>
 
       <ItemSheet
         target={sheet}
@@ -212,7 +211,7 @@ function TimelineRow({ item, order, onOpen }: RowProps) {
 function ItemCard({ item, order, onOpen }: RowProps) {
   const label = timeLabel(item);
   return (
-    <button type="button" className={styles.card} style={{ animationDelay: `${order * 60}ms` }} onClick={onOpen}>
+    <Button className={styles.card} style={{ animationDelay: `${order * 60}ms` }} onClick={onOpen}>
       <span className={styles.cardTitle}>
         <span className={styles.icon} aria-hidden>
           {item.emoji ?? DEFAULT_EMOJI}
@@ -221,6 +220,6 @@ function ItemCard({ item, order, onOpen }: RowProps) {
       </span>
       {label && <span className={`${styles.cardTime} num`}>{label}</span>}
       {item.memo && <span className={styles.memo}>{item.memo}</span>}
-    </button>
+    </Button>
   );
 }

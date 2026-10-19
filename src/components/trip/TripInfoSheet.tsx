@@ -1,10 +1,11 @@
 "use client";
 
+import { Button } from "@base-ui/react/button";
 import { useId, useState, type FormEvent } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { showToast } from "@/components/toast";
-import { TripFields } from "@/components/TripFields";
+import { TripFields, type TripFieldsError } from "@/components/TripFields";
 import formStyles from "@/components/TripCreateForm.module.css";
 import { validateTripInput, type Period, type TripDraft } from "@/lib/trip-input";
 import { dayChipDate } from "@/lib/trip/format";
@@ -135,7 +136,7 @@ function TripInfoForm({ trip, draft: initial, offline, onSave }: TripInfoFormPro
       seen.title !== now.title || seen.startDate !== now.startDate || seen.endDate !== now.endDate,
     merge: (seen: TripDraft, mine: TripDraft, now: TripDraft) => ({ base: now, ...mergeRemoteFields(seen, mine, now) }),
   });
-  const [error, setError] = useState<{ field: "title" | "period"; message: string } | null>(null);
+  const [error, setError] = useState<TripFieldsError | null>(null);
   const [pending, setPending] = useState<{ title: string | undefined; period: Period } | null>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -156,8 +157,6 @@ function TripInfoForm({ trip, draft: initial, offline, onSave }: TripInfoFormPro
     onSave(newTitle, period);
   }
 
-  const errorId = `${id}-error`;
-
   return (
     <form className={formStyles.form} onSubmit={handleSubmit} noValidate>
       {offline && (
@@ -169,18 +168,13 @@ function TripInfoForm({ trip, draft: initial, offline, onSave }: TripInfoFormPro
         id={id}
         value={draft}
         onChange={setDraft}
-        error={error && { field: error.field, describedBy: errorId }}
+        error={error}
         remote={marks}
       />
       <p className={formStyles.hint}>기간을 줄이면 빠지는 날짜의 일정이 함께 삭제돼요. 저장하기 전에 한 번 더 확인해요.</p>
-      {error && (
-        <p id={errorId} className={formStyles.error} role="alert">
-          {error.message}
-        </p>
-      )}
-      <button type="submit" className={formStyles.submit}>
+      <Button type="submit" className={formStyles.submit}>
         저장
-      </button>
+      </Button>
       <PeriodConfirmDialog
         open={pending !== null}
         trip={trip}

@@ -169,6 +169,11 @@
   font-size: 13px;
 }
 
+/* The emoji error wraps onto its own line below the picker. */
+.emojis .error {
+  flex-basis: 100%;
+}
+
 .error {
   font-size: 13px;
   font-weight: 600;
@@ -263,8 +268,8 @@
   color: var(--text-muted);
 }
 
-.saveButton:disabled,
-.dangerButton:disabled {
+.saveButton[data-disabled],
+.dangerButton[data-disabled] {
   cursor: not-allowed;
   opacity: 0.5;
 }

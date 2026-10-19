@@ -1,12 +1,13 @@
 "use client";
 
+import { Button } from "@base-ui/react/button";
 import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
 import { createTrip } from "@/lib/create-trip";
 import { getSupabase } from "@/lib/supabase";
 import { validateTripInput, type TripDraft } from "@/lib/trip-input";
 import { showToast } from "./toast";
-import { TripFields } from "./TripFields";
+import { TripFields, type TripFieldsError } from "./TripFields";
 import styles from "./TripCreateForm.module.css";
 
 export type CreatedTrip = TripDraft & { token: string };
@@ -30,7 +31,7 @@ export function TripCreateForm({ onCreated }: TripCreateFormProps) {
   const [title, setTitle] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [error, setError] = useState<{ field: "title" | "period" | "form"; message: string } | null>(null);
+  const [error, setError] = useState<TripFieldsError | null>(null);
   const [pending, setPending] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -62,8 +63,6 @@ export function TripCreateForm({ onCreated }: TripCreateFormProps) {
     setPending(false);
   }
 
-  const errorId = `${id}-error`;
-
   return (
     <form className={styles.form} onSubmit={handleSubmit} noValidate>
       <TripFields
@@ -74,16 +73,17 @@ export function TripCreateForm({ onCreated }: TripCreateFormProps) {
           setStartDate(next.startDate);
           setEndDate(next.endDate);
         }}
-        error={error && { field: error.field, describedBy: errorId }}
+        error={error}
       />
-      {error && (
-        <p id={errorId} className={styles.error} role="alert">
+      {error?.field === "form" && (
+        <p className={styles.error} role="alert">
           {error.message}
         </p>
       )}
-      <button type="submit" className={styles.submit} disabled={pending}>
+      {/* Stays focusable while creating, so focus isn't dropped mid-request. */}
+      <Button type="submit" className={styles.submit} disabled={pending} focusableWhenDisabled>
         {pending ? "만드는 중…" : "여행 만들기"}
-      </button>
+      </Button>
     </form>
   );
 }

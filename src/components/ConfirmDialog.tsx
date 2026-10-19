@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertDialog } from "@base-ui/react/alert-dialog";
+import { Button } from "@base-ui/react/button";
 import { useRef, type ReactNode } from "react";
 import styles from "./ConfirmDialog.module.css";
 
@@ -52,13 +53,12 @@ export function ConfirmDialog({
             <AlertDialog.Close ref={cancelRef} className={styles.cancel}>
               취소
             </AlertDialog.Close>
-            <button
-              type="button"
+            <Button
               className={danger ? `${styles.confirm} ${styles.danger}` : styles.confirm}
               onClick={onConfirm}
             >
               {confirmLabel}
-            </button>
+            </Button>
           </div>
         </AlertDialog.Popup>
       </AlertDialog.Portal>

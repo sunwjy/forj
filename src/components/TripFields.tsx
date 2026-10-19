@@ -1,51 +1,60 @@
 "use client";
 
+import { Field } from "@base-ui/react/field";
 import { RemoteNote, remoteClass } from "@/components/trip/RemoteField";
 import { MAX_PERIOD_DAYS, MAX_TITLE_LENGTH, type TripDraft } from "@/lib/trip-input";
 import type { RemoteMark, RemoteMarks } from "@/lib/trip/remote-edit";
 import styles from "./TripCreateForm.module.css";
 
+export type TripFieldsError = { field: "title" | "period" | "form"; message: string };
+
 type TripFieldsProps = {
-  /** Prefix for the inputs' ids, from `useId`. */
+  /** Prefix for element ids, from `useId`. */
   id: string;
   value: TripDraft;
   onChange: (value: TripDraft) => void;
-  /** The field the current error is about, and the id of the element describing it. */
-  error?: { field: "title" | "period" | "form"; describedBy: string } | null;
+  /** Title and period errors are shown here, next to their fields; the form shows `form` errors. */
+  error?: TripFieldsError | null;
   /** Fields someone else changed while the edit sheet was open (spec 7.7). */
   remote?: RemoteMarks<keyof TripDraft>;
 };
 
-/** A trip's title, start date and end date (spec 2.1), for creating a trip and for editing it. */
+/**
+ * A trip's title, start date and end date (spec 2.1), for creating a trip and
+ * for editing it. Base UI's Field ties each label and error to its input.
+ */
 export function TripFields({ id, value, onChange, error, remote = {} }: TripFieldsProps) {
-  const describe = (field: "title" | "period") => (error?.field === field ? error.describedBy : undefined);
   const { title, startDate, endDate } = value;
   const periodMarks = [remote.startDate, remote.endDate];
   const periodMark: RemoteMark | undefined = periodMarks.includes("mine") ? "mine" : periodMarks.find(Boolean);
+  const periodInvalid = error?.field === "period";
+  // One message describes both dates, so it sits outside either Field and each input points at it.
+  const periodErrorId = periodInvalid ? `${id}-period-error` : undefined;
 
   return (
     <>
-      <div className={remoteClass(styles.field, remote.title)}>
-        <label htmlFor={`${id}-title`}>여행 제목</label>
-        <input
-          id={`${id}-title`}
+      <Field.Root invalid={error?.field === "title"} className={remoteClass(styles.field, remote.title)}>
+        <Field.Label>여행 제목</Field.Label>
+        <Field.Control
           value={title}
           onChange={(event) => onChange({ ...value, title: event.target.value })}
           placeholder="예: 오사카 먹방 여행"
           autoComplete="off"
           enterKeyHint="next"
-          aria-invalid={error?.field === "title"}
-          aria-describedby={describe("title")}
           // The browser counts UTF-16 units; the code-point limit is checked on submit.
           maxLength={MAX_TITLE_LENGTH * 2}
         />
+        {error?.field === "title" && (
+          <Field.Error match className={styles.error} role="alert">
+            {error.message}
+          </Field.Error>
+        )}
         <RemoteNote mark={remote.title} />
-      </div>
+      </Field.Root>
       <div className={remoteClass(styles.row, periodMark)}>
-        <div className={styles.field}>
-          <label htmlFor={`${id}-start`}>시작일</label>
-          <input
-            id={`${id}-start`}
+        <Field.Root invalid={periodInvalid} className={styles.field}>
+          <Field.Label>시작일</Field.Label>
+          <Field.Control
             type="date"
             value={startDate}
             onChange={(event) => {
@@ -53,22 +62,24 @@ export function TripFields({ id, value, onChange, error, remote = {} }: TripFiel
               // Most people pick the start first; keep the end from landing before it.
               onChange({ ...value, startDate: next, endDate: next && (!endDate || endDate < next) ? next : endDate });
             }}
-            aria-invalid={error?.field === "period"}
-            aria-describedby={describe("period")}
+            aria-describedby={periodErrorId}
           />
-        </div>
-        <div className={styles.field}>
-          <label htmlFor={`${id}-end`}>종료일</label>
-          <input
-            id={`${id}-end`}
+        </Field.Root>
+        <Field.Root invalid={periodInvalid} className={styles.field}>
+          <Field.Label>종료일</Field.Label>
+          <Field.Control
             type="date"
             value={endDate}
             min={startDate || undefined}
             onChange={(event) => onChange({ ...value, endDate: event.target.value })}
-            aria-invalid={error?.field === "period"}
-            aria-describedby={describe("period")}
+            aria-describedby={periodErrorId}
           />
-        </div>
+        </Field.Root>
+        {error?.field === "period" && (
+          <p id={periodErrorId} className={`${styles.rowNote} ${styles.error}`} role="alert">
+            {error.message}
+          </p>
+        )}
         {periodMark && (
           <div className={styles.rowNote}>
             <RemoteNote mark={periodMark} />

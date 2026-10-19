@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@base-ui/react/button";
 import Link from "next/link";
 import { useState } from "react";
 import { periodLabel } from "@/lib/trip/format";
@@ -53,9 +54,9 @@ export function Home() {
 
   return (
     <>
-      <button type="button" className={styles.newTrip} onClick={() => setSheetOpen(true)}>
+      <Button className={styles.newTrip} onClick={() => setSheetOpen(true)}>
         ＋ 새 여행 만들기
-      </button>
+      </Button>
       <section aria-labelledby="recent-trips-title">
         <h1 id="recent-trips-title" className={styles.sectionTitle}>
           최근 여행
@@ -67,15 +68,14 @@ export function Home() {
                 <b className="display">{trip.title}</b>
                 <span className="num">{periodLabel(trip.startDate, trip.endDate)}</span>
               </Link>
-              <button
-                type="button"
+              <Button
                 className={styles.forget}
                 aria-label={`「${trip.title}」 목록에서 지우기`}
                 title="목록에서 지우기"
                 onClick={() => forget(trip.token)}
               >
                 ×
-              </button>
+              </Button>
             </li>
           ))}
         </ul>

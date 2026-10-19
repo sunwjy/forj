@@ -99,7 +99,7 @@
   box-shadow: 0 2px 0 var(--primary-ledge);
 }
 
-.submit:disabled {
+.submit[data-disabled] {
   cursor: progress;
   opacity: 0.7;
 }
