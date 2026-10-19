@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@base-ui/react/button";
+import { Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { periodLabel } from "@/lib/trip/format";
@@ -18,7 +19,7 @@ function rememberCreated(trip: CreatedTrip) {
 
 /**
  * The first screen below the brand (spec 7.1). With no recent trips it shows
- * the introduction and the creation form; otherwise 「＋ 새 여행 만들기」 (form in
+ * the introduction and the creation form; otherwise 「새 여행 만들기」 (form in
  * a bottom sheet) above the recent trips list, drawn from local snapshots only.
  */
 export function Home() {
@@ -55,7 +56,8 @@ export function Home() {
   return (
     <>
       <Button className={styles.newTrip} onClick={() => setSheetOpen(true)}>
-        ＋ 새 여행 만들기
+        <Plus size={18} strokeWidth={2.5} />
+        새 여행 만들기
       </Button>
       <section aria-labelledby="recent-trips-title">
         <h1 id="recent-trips-title" className={styles.sectionTitle}>
@@ -74,7 +76,7 @@ export function Home() {
                 title="목록에서 지우기"
                 onClick={() => forget(trip.token)}
               >
-                ×
+                <X size={20} strokeWidth={2.25} />
               </Button>
             </li>
           ))}

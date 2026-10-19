@@ -31,7 +31,7 @@ type TripInfoSheetProps = {
   /** The rebased view: server snapshot plus pending changes. */
   trip: TripSnapshot;
   writer: TripWriter;
-  /** Changes every time the ✏️ button is pressed; `0` means not yet. */
+  /** Changes every time the edit (pencil) button is pressed; `0` means not yet. */
   openRequest: number;
   /** Shows the connection-lost badge atop the sheet (spec 7.7). */
   offline?: boolean;

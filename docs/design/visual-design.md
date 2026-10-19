@@ -154,6 +154,10 @@ body { font-family: var(--font-body); color: var(--text); background: var(--bg);
 }
 ```
 
+- UI 아이콘은 `lucide-react`로 그립니다([ADR 0004](../adr/0004-ui-icons-lucide-item-icons-emoji.md)). 크기는 상단 바 20~22px, 그 밖의 버튼 18~20px이고, 선 굵기는 2.25(글자 옆의 `Plus`는 2.5)입니다. 색은 `currentColor`로 버튼의 글자색을 따릅니다.
+- 일정 아이콘과 장식용 그림(🧳, 🗺️ 등)은 이모지로 둡니다.
+- 아이콘만 있는 버튼에는 `aria-label`로 이름을 붙입니다. 아이콘 SVG는 `aria-hidden`입니다.
+
 ### 4.3 일차 칩
 
 ```css

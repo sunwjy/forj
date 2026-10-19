@@ -2,6 +2,7 @@
 
 import { Button } from "@base-ui/react/button";
 import { Tabs } from "@base-ui/react/tabs";
+import { ArrowLeft, LinkIcon, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { showToast } from "@/components/toast";
@@ -88,7 +89,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
     <main className={styles.screen}>
       <div className={styles.topbar}>
         <Link href="/" className={styles.iconButton} aria-label="뒤로">
-          ←
+          <ArrowLeft size={22} strokeWidth={2.25} />
         </Link>
         <div className={styles.topbarMid}>
           {offline ? (
@@ -102,7 +103,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
           aria-label="공유 링크 복사"
           onClick={() => copyShareLink(window.location.href, navigator.clipboard)}
         >
-          🔗
+          <LinkIcon size={20} strokeWidth={2.25} />
         </Button>
       </div>
 
@@ -114,7 +115,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
             aria-label="여행 정보 수정"
             onClick={() => setTripInfoRequest((n) => n + 1)}
           >
-            ✏️
+            <Pencil size={18} strokeWidth={2.25} />
           </Button>
         </h1>
         <p className={`${styles.period} num`}>{periodLabel(trip.start_date, trip.end_date)}</p>
@@ -161,7 +162,8 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
       </Tabs.Root>
 
       <Button className={styles.fab} onClick={() => openNew(blankDraft(selected.date))}>
-        ＋ 일정 추가
+        <Plus size={18} strokeWidth={2.5} />
+        일정 추가
       </Button>
 
       <ItemSheet

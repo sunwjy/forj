@@ -19,7 +19,7 @@ type TripCreateFormProps = {
 
 const DISABLED_MESSAGE = "지금은 여행을 만들 수 없습니다. 잠시 후 다시 시도해 주세요.";
 const FAILED_MESSAGE = "여행을 만들지 못했어요. 잠시 후 다시 시도해 주세요.";
-const CREATED_TOAST = "여행을 만들었어요. 🔗를 눌러 링크를 보내 보세요.";
+const CREATED_TOAST = "여행을 만들었어요. 위쪽 공유 버튼으로 링크를 보내 보세요.";
 
 /**
  * The trip creation form (spec 7.1): title, start date, end date. On success it
