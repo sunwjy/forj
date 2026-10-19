@@ -283,6 +283,7 @@ Safari를 지원하려면 `mask`와 함께 `-webkit-mask`도 지정합니다.
 | 일차 칩 선택 | `translateY(-3px)`, 350ms, `--spring` |
 | 카드 등장 | `pop-in` 450ms, `--spring`, 항목마다 60ms 지연 |
 | 토스트 | 450ms, `--spring` |
+| 바텀 시트 등장·복귀 | 380ms, `--ease-out` (하단에 붙어 있으므로 오버슈트하면 아래에 빈 공간이 드러남) |
 
 그림자는 애니메이션하지 않고 `transform`과 `opacity`만 움직입니다. `prefers-reduced-motion: reduce`에서는 애니메이션과 전환을 모두 끕니다.
 

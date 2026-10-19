@@ -43,7 +43,8 @@
   color: var(--text);
   outline: 0;
   transform: translateY(var(--drawer-swipe-movement-y));
-  transition: transform 380ms var(--spring);
+  /* No overshoot: the sheet is bottom-anchored, so rising past 0 would expose a gap beneath it. */
+  transition: transform 380ms var(--ease-out);
 }
 
 .sheet[data-starting-style],
@@ -52,7 +53,6 @@
 }
 
 .sheet[data-ending-style] {
-  transition-timing-function: var(--ease-out);
   transition-duration: calc(var(--drawer-swipe-strength) * 380ms);
 }
 
