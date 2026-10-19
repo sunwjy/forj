@@ -10,7 +10,7 @@ import type { IsoDate } from "@/lib/trip/branded";
 import { changedItemId, optimisticCreatedAt } from "@/lib/trip/changes";
 import { type Day, ddayLabel, initialDay, tripDays } from "@/lib/trip/days";
 import { dayChipDate, periodLabel, timeLabel } from "@/lib/trip/format";
-import { blankDraft, draftFromItem, itemFields, type ItemDraft } from "@/lib/trip/item-draft";
+import { blankDraft, draftFromItem, itemFields, OUT_OF_RANGE_MESSAGE, type ItemDraft } from "@/lib/trip/item-draft";
 import { copyShareLink } from "@/lib/trip/share-link";
 import type { ItemSnapshot, TripSnapshot } from "@/lib/trip/snapshot";
 import { dayTimeline } from "@/lib/trip/timeline";
@@ -37,7 +37,6 @@ type TripViewProps = {
   offline?: boolean;
 };
 
-const OUT_OF_RANGE_TOAST = "여행 기간에서 빠진 날짜예요";
 const DELETED_TOAST = "삭제된 일정이라 저장하지 못했어요";
 const FAILED_TOAST = "저장하지 못했어요";
 
@@ -86,7 +85,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
     if (code === "ITEM_NOT_FOUND") {
       showToast(DELETED_TOAST, draft && { label: "새 일정으로 추가", onClick: () => openNew(draft) });
     } else if (code === "DATE_OUT_OF_RANGE") {
-      showToast(OUT_OF_RANGE_TOAST, current || draft ? { label: "다시 편집", onClick: editAgain } : undefined);
+      showToast(OUT_OF_RANGE_MESSAGE, current || draft ? { label: "다시 편집", onClick: editAgain } : undefined);
     } else {
       showToast(FAILED_TOAST, current && { label: "다시 편집", onClick: editAgain });
     }

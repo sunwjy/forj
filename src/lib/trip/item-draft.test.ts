@@ -98,17 +98,22 @@ describe("validateItemDraft", () => {
     expect(validateItemDraft({ ...draft, emoji: "🍜🍣" })).toMatchObject({ ok: false, field: "emoji" });
   });
 
-  it("rejects a date that is not a real YYYY-MM-DD date", () => {
-    expect(validateItemDraft({ ...draft, date: "" })).toMatchObject({ ok: false, field: "date" });
-    expect(validateItemDraft({ ...draft, date: "2026-02-30" })).toMatchObject({ ok: false, field: "date" });
+  // The pickers cannot produce these, so the sheet shows no new copy for them:
+  // they reuse messages the screen already shows (#35 out of scope).
+  it("rejects a date that is not a real YYYY-MM-DD date with the out-of-range message", () => {
+    const rejected = { ok: false, field: "time", message: "여행 기간에서 빠진 날짜예요" };
+    expect(validateItemDraft({ ...draft, date: "" })).toEqual(rejected);
+    expect(validateItemDraft({ ...draft, date: "2026-02-30" })).toEqual(rejected);
   });
 
-  it("rejects a start or end time that is not HH:MM", () => {
-    expect(validateItemDraft({ ...draft, startTime: "9:00" })).toMatchObject({ ok: false, field: "time" });
-    expect(validateItemDraft({ ...draft, startTime: "09:00", endTime: "24:00" })).toMatchObject({
+  it("rejects a start or end time that is not HH:MM with the existing time message", () => {
+    const rejected = {
       ok: false,
       field: "time",
-    });
+      message: "종료 시각만 둘 수는 없어요. 시작 시각을 먼저 골라 주세요.",
+    };
+    expect(validateItemDraft({ ...draft, startTime: "9:00" })).toEqual(rejected);
+    expect(validateItemDraft({ ...draft, startTime: "09:00", endTime: "24:00" })).toEqual(rejected);
   });
 });
 

@@ -227,7 +227,7 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
         <RemoteNote mark={remote("title")} />
       </Field.Root>
 
-      <Field.Root invalid={invalid("date")} className={fieldClass(remote("date"))}>
+      <Field.Root className={fieldClass(remote("date"))}>
         <Field.Label>일차</Field.Label>
         {/* A native select keeps the phone's own picker. */}
         <Field.Control
@@ -241,7 +241,6 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
             </option>
           ))}
         </Field.Control>
-        {fieldError("date")}
         <RemoteNote mark={remote("date")} />
       </Field.Root>
 
