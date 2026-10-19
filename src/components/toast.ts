@@ -1,42 +1,42 @@
+import { Toast } from "@base-ui/react/toast";
+
 /**
- * One toast at a time, shown by the `<Toaster>` in the root layout. The store
+ * One toast at a time, shown by the `<Toaster>` in the root layout. The manager
  * lives at module level so a toast raised right before `router.push` survives
  * the client-side navigation (spec 7.1).
  */
+export const toastManager = Toast.createToastManager();
 
 export type ToastAction = { label: string; onClick: () => void };
-export type Toast = { id: number; message: string; actions: ToastAction[] };
 
-let current: Toast | null = null;
-let nextId = 1;
-let timer: ReturnType<typeof setTimeout> | undefined;
-const listeners = new Set<() => void>();
+let current: { id: string; message: string } | null = null;
 
-function emit() {
-  for (const listener of listeners) listener();
-}
-
-/** Shows a toast, replacing any current one. Toasts with actions stay longer. */
-export function showToast(message: string, actions: ToastAction[] = []) {
-  current = { id: nextId++, message, actions };
-  clearTimeout(timer);
-  timer = setTimeout(dismissToast, actions.length ? 6000 : 2400);
-  emit();
+/** Shows a toast, replacing any current one. Toasts with an action stay longer. */
+export function showToast(message: string, action?: ToastAction) {
+  dismissToast();
+  const id = toastManager.add({
+    title: message,
+    timeout: action ? 6000 : 2400,
+    onClose: () => {
+      if (current?.id === id) current = null;
+    },
+    actionProps: action && {
+      children: action.label,
+      onClick: () => {
+        toastManager.close(id);
+        action.onClick();
+      },
+    },
+  });
+  current = { id, message };
 }
 
 export function dismissToast() {
-  clearTimeout(timer);
+  if (current) toastManager.close(current.id);
   current = null;
-  emit();
 }
 
-export function subscribeToast(listener: () => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
+/** The toast on screen, if any. */
 export function getToast() {
   return current;
 }

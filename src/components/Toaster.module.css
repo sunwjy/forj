@@ -9,25 +9,57 @@
   pointer-events: none;
 }
 
+/* A replaced toast leaves while the next one arrives, so they share one spot. */
 .toast {
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  position: absolute;
+  bottom: 0;
   max-width: 480px;
-  padding: 8px 8px 8px 18px;
-  min-height: 44px;
+  pointer-events: auto;
   border-radius: var(--r-full);
   background: var(--text);
   color: var(--bg);
   font-size: 14px;
   font-weight: 600;
-  animation: toast-in 450ms var(--spring) both;
+  transform: translate(var(--toast-swipe-movement-x), var(--toast-swipe-movement-y));
+  transition:
+    transform 450ms var(--spring),
+    opacity 450ms;
+}
+
+.toast[data-starting-style] {
+  transform: translateY(160%);
+  opacity: 0;
+}
+
+.toast[data-ending-style] {
+  opacity: 0;
+  transition-timing-function: var(--ease-out);
+}
+
+.toast[data-ending-style][data-swipe-direction="down"] {
+  transform: translateY(160%);
+}
+
+.toast[data-ending-style][data-swipe-direction="right"] {
+  transform: translateX(120%);
+}
+
+.toast[data-swiping] {
+  transition-duration: 0ms;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 8px 8px 8px 18px;
 }
 
 .message {
   flex: 1;
   padding: 4px 10px 4px 0;
+  font: inherit;
 }
 
 .action {
@@ -43,9 +75,8 @@
   cursor: pointer;
 }
 
-@keyframes toast-in {
-  from {
-    transform: translateY(160%);
-    opacity: 0;
-  }
+/* The ring sits on the dark pill, so it uses the light action color. */
+.action:focus-visible,
+.toast:focus-visible {
+  outline-color: #FFC2AE;
 }

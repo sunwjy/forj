@@ -32,7 +32,6 @@
   border-radius: var(--r-full);
   background: var(--surface);
   box-shadow: 0 2px 8px rgb(var(--shadow-tint) / .08);
-  font-size: 18px;
   color: var(--text);
   text-decoration: none;
   cursor: pointer;
@@ -41,10 +40,6 @@
 
 .iconButton:active {
   transform: translateY(2px) scale(.98);
-}
-
-.iconButton:disabled {
-  cursor: default;
 }
 
 .dday {
@@ -69,7 +64,7 @@
   overflow-wrap: anywhere;
 }
 
-/* ✏️ next to the title opens the trip info sheet (spec 7.5). */
+/* The pencil next to the title opens the trip info sheet (spec 7.5). */
 .editTrip {
   display: inline-grid;
   place-items: center;
@@ -80,7 +75,7 @@
   border: 0;
   border-radius: var(--r-full);
   background: none;
-  font-size: 18px;
+  color: var(--text-muted);
   cursor: pointer;
 }
 
@@ -102,7 +97,6 @@
   margin: 0 -20px;
   padding: 6px 20px 14px;
   scrollbar-width: none;
-  list-style: none;
 }
 
 .chip {
@@ -129,13 +123,13 @@
   color: var(--text-muted);
 }
 
-.chip[aria-pressed="true"] {
+.chip[aria-selected="true"] {
   background: var(--day-soft);
   border-color: var(--day-ink);
   transform: translateY(-3px);
 }
 
-.chip[aria-pressed="true"] b {
+.chip[aria-selected="true"] b {
   color: var(--day-ink);
 }
 
@@ -265,6 +259,9 @@
 
 /* Floating add button (4.1) */
 .fab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   position: fixed;
   right: max(20px, calc(50% - 220px));
   bottom: calc(28px + env(safe-area-inset-bottom));

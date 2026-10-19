@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@base-ui/react/button";
 import Link from "next/link";
 import { use, useEffect } from "react";
 import { recordTripLookup } from "@/lib/recent-trips";
@@ -37,9 +38,9 @@ export function TripScreen({ params }: { params: Promise<{ token: string }> }) {
         </div>
         <h1 className={styles.messageTitle}>여행을 불러오지 못했어요</h1>
         <p className={styles.messageBody}>인터넷 연결을 확인한 뒤 다시 시도해 주세요.</p>
-        <button type="button" className={styles.primaryButton} onClick={reload}>
+        <Button className={styles.primaryButton} onClick={reload}>
           다시 시도
-        </button>
+        </Button>
       </main>
     );
   }

@@ -1,5 +1,9 @@
 "use client";
 
+import { Button } from "@base-ui/react/button";
+import { Field } from "@base-ui/react/field";
+import { Toggle } from "@base-ui/react/toggle";
+import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { useId, useState, type FormEvent } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -52,9 +56,15 @@ type ItemSheetProps = {
 
 /** The add/edit item bottom sheet (spec 7.4). */
 export function ItemSheet({ target, days, items, onClose, ...actions }: ItemSheetProps) {
+  // Keeps the last form on screen, as it was, while the sheet slides away;
+  // a just-saved item would otherwise show up in it as an overlap.
+  const [shown, setShown] = useState({ target, items });
+  if (target && (target !== shown.target || items !== shown.items)) setShown({ target, items });
+  const form = shown.target;
+
   return (
-    <BottomSheet open={target !== null} onClose={onClose} title={target?.mode === "edit" ? "일정 편집" : "새 일정"}>
-      {target && <ItemForm key={target.key} target={target} days={days} items={items} onClose={onClose} {...actions} />}
+    <BottomSheet open={target !== null} onClose={onClose} title={form?.mode === "edit" ? "일정 편집" : "새 일정"}>
+      {form && <ItemForm key={form.key} target={form} days={days} items={shown.items} onClose={onClose} {...actions} />}
     </BottomSheet>
   );
 }
@@ -137,9 +147,16 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
     onClose();
   }
 
-  const errorId = `${id}-error`;
   const invalid = (field: ItemDraftField) => error?.field === field;
-  const describe = (field: ItemDraftField) => (invalid(field) ? errorId : undefined);
+  /** The error under a field, tied to its input by the enclosing Field.Root. */
+  const fieldError = (field: ItemDraftField) =>
+    invalid(field) && (
+      <Field.Error match className={styles.error} role="alert">
+        {error?.message}
+      </Field.Error>
+    );
+  // The time error describes both inputs, so it sits outside either Field and each input points at it.
+  const timeErrorId = invalid("time") ? `${id}-time-error` : undefined;
   const customEmoji = SUGGESTED_EMOJI.includes(draft.emoji) ? "" : draft.emoji;
 
   return (
@@ -153,100 +170,111 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
         <div className={styles.deletedBanner} role="alert">
           삭제된 일정입니다. 다른 사람이 이 일정을 지웠어요.
           <div className={styles.bannerActions}>
-            <button type="button" className={styles.softButton} onClick={() => onReAdd(draft)}>
+            <Button className={styles.softButton} onClick={() => onReAdd(draft)}>
               새 일정으로 추가
-            </button>
-            <button type="button" className={styles.ghostButton} onClick={onClose}>
+            </Button>
+            <Button className={styles.ghostButton} onClick={onClose}>
               닫기
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       <fieldset className={fieldClass(remote("emoji"))}>
         <legend>아이콘</legend>
-        <div className={styles.emojis}>
-          {SUGGESTED_EMOJI.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              aria-pressed={draft.emoji === emoji}
-              onClick={() => set("emoji", draft.emoji === emoji ? "" : emoji)}
-            >
-              {emoji}
-            </button>
-          ))}
-          <input
+        <Field.Root invalid={invalid("emoji")} className={styles.emojis}>
+          <ToggleGroup
+            className={styles.emojiGroup}
+            aria-label="추천 이모지"
+            value={SUGGESTED_EMOJI.includes(draft.emoji) ? [draft.emoji] : []}
+            // Pressing the chosen emoji again clears it.
+            onValueChange={(value) => set("emoji", value[0] ?? "")}
+          >
+            {SUGGESTED_EMOJI.map((emoji) => (
+              <Toggle key={emoji} value={emoji} className={styles.emoji}>
+                {emoji}
+              </Toggle>
+            ))}
+          </ToggleGroup>
+          <Field.Control
             className={styles.emojiInput}
             value={customEmoji}
             onChange={(event) => set("emoji", event.target.value)}
             placeholder="직접"
             aria-label="이모지 직접 입력"
-            aria-invalid={invalid("emoji")}
-            aria-describedby={describe("emoji")}
             autoComplete="off"
             maxLength={32}
           />
-        </div>
+          {fieldError("emoji")}
+        </Field.Root>
         <RemoteNote mark={remote("emoji")} />
       </fieldset>
 
-      <div className={fieldClass(remote("title"))}>
-        <label htmlFor={`${id}-title`}>제목</label>
-        <input
-          id={`${id}-title`}
+      <Field.Root invalid={invalid("title")} className={fieldClass(remote("title"))}>
+        <Field.Label>제목</Field.Label>
+        <Field.Control
           value={draft.title}
           onChange={(event) => set("title", event.target.value)}
           placeholder="예: 이치란 라멘"
           autoComplete="off"
           enterKeyHint="done"
-          aria-invalid={invalid("title")}
-          aria-describedby={describe("title")}
           // The browser counts UTF-16 units; the code-point limit is checked on save.
           maxLength={MAX_ITEM_TITLE_LENGTH * 2}
         />
+        {fieldError("title")}
         <RemoteNote mark={remote("title")} />
-      </div>
+      </Field.Root>
 
-      <div className={fieldClass(remote("date"))}>
-        <label htmlFor={`${id}-date`}>일차</label>
-        <select id={`${id}-date`} value={draft.date} onChange={(event) => set("date", event.target.value)}>
+      <Field.Root className={fieldClass(remote("date"))}>
+        <Field.Label>일차</Field.Label>
+        {/* A native select keeps the phone's own picker. */}
+        <Field.Control
+          render={<select />}
+          value={draft.date}
+          onChange={(event) => set("date", event.target.value)}
+        >
           {days.map((day) => (
             <option key={day.date} value={day.date}>
               {day.number}일차 · {dayChipDate(day.date)}
             </option>
           ))}
-        </select>
+        </Field.Control>
         <RemoteNote mark={remote("date")} />
-      </div>
+      </Field.Root>
 
       <fieldset className={fieldClass(remote("start_time", "end_time"))}>
         <legend>
           시각 <span className={styles.legendNote}>(비워 두면 「시간 미정」)</span>
         </legend>
         <div className={styles.row}>
-          <input
-            type="time"
-            aria-label="시작 시각"
-            value={draft.start_time}
-            onChange={(event) => {
-              const start = event.target.value;
-              // An end time needs a start time (spec 2.3).
-              setDraft((d) => ({ ...d, start_time: start, end_time: start ? d.end_time : "" }));
-            }}
-            aria-invalid={invalid("time")}
-            aria-describedby={describe("time")}
-          />
-          <input
-            type="time"
-            aria-label="종료 시각"
-            value={draft.end_time}
-            disabled={!draft.start_time}
-            onChange={(event) => set("end_time", event.target.value)}
-            aria-invalid={invalid("time")}
-            aria-describedby={describe("time")}
-          />
+          <Field.Root invalid={invalid("time")}>
+            <Field.Control
+              type="time"
+              aria-label="시작 시각"
+              value={draft.start_time}
+              onChange={(event) => {
+                const start = event.target.value;
+                // An end time needs a start time (spec 2.3).
+                setDraft((d) => ({ ...d, start_time: start, end_time: start ? d.end_time : "" }));
+              }}
+              aria-describedby={timeErrorId}
+            />
+          </Field.Root>
+          <Field.Root invalid={invalid("time")} disabled={!draft.start_time}>
+            <Field.Control
+              type="time"
+              aria-label="종료 시각"
+              value={draft.end_time}
+              onChange={(event) => set("end_time", event.target.value)}
+              aria-describedby={timeErrorId}
+            />
+          </Field.Root>
         </div>
+        {invalid("time") && (
+          <p id={timeErrorId} className={styles.error} role="alert">
+            {error?.message}
+          </p>
+        )}
         {draft.start_time && (
           <div className={styles.durations}>
             <span className={styles.durationLabel}>
@@ -256,24 +284,24 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
                   }`
                 : "소요 시간"}
             </span>
-            {DURATIONS.map((minutes) => (
-              <button
-                key={minutes}
-                type="button"
-                className={styles.chip}
-                aria-pressed={draft.end_time === addMinutes(draft.start_time, minutes)}
-                onClick={() => set("end_time", addMinutes(draft.start_time, minutes))}
-              >
-                {durationLabel(minutes)}
-              </button>
-            ))}
-            <button
-              type="button"
-              className={styles.chip}
-              onClick={() => setDraft((d) => ({ ...d, start_time: "", end_time: "" }))}
+            <ToggleGroup
+              className={styles.durationGroup}
+              aria-label="소요 시간"
+              value={DURATIONS.filter((minutes) => draft.end_time === addMinutes(draft.start_time, minutes)).map(String)}
+              onValueChange={(value) => {
+                // Pressing the current duration again keeps it rather than clearing the end time.
+                if (value[0]) set("end_time", addMinutes(draft.start_time, Number(value[0])));
+              }}
             >
+              {DURATIONS.map((minutes) => (
+                <Toggle key={minutes} value={String(minutes)} className={styles.chip}>
+                  {durationLabel(minutes)}
+                </Toggle>
+              ))}
+            </ToggleGroup>
+            <Button className={styles.chip} onClick={() => setDraft((d) => ({ ...d, start_time: "", end_time: "" }))}>
               시각 지우기
-            </button>
+            </Button>
           </div>
         )}
         {notice && (
@@ -284,40 +312,34 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
         <RemoteNote mark={remote("start_time", "end_time")} />
       </fieldset>
 
-      <div className={fieldClass(remote("memo"))}>
-        <label htmlFor={`${id}-memo`}>메모</label>
-        <textarea
-          id={`${id}-memo`}
+      <Field.Root invalid={invalid("memo")} className={fieldClass(remote("memo"))}>
+        <Field.Label>메모</Field.Label>
+        <Field.Control
+          render={<textarea />}
           value={draft.memo}
           onChange={(event) => set("memo", event.target.value)}
           placeholder="예약 번호, 주소, 준비물"
-          aria-invalid={invalid("memo")}
-          aria-describedby={describe("memo")}
           maxLength={MAX_MEMO_LENGTH * 2}
         />
+        {fieldError("memo")}
         <RemoteNote mark={remote("memo")} />
-      </div>
-
-      {error && (
-        <p id={errorId} className={styles.error} role="alert">
-          {error.message}
-        </p>
-      )}
+      </Field.Root>
 
       <div className={styles.actions}>
         {editing && (
-          <button
-            type="button"
+          // Disabled buttons stay focusable, so screen reader users still find them after a deletion.
+          <Button
             className={styles.dangerButton}
             disabled={deleted}
+            focusableWhenDisabled
             onClick={() => setConfirmingDelete(true)}
           >
             삭제
-          </button>
+          </Button>
         )}
-        <button type="submit" className={styles.saveButton} disabled={deleted}>
+        <Button type="submit" className={styles.saveButton} disabled={deleted} focusableWhenDisabled>
           저장
-        </button>
+        </Button>
       </div>
 
       {editing && (

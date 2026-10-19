@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { AlertDialog } from "@base-ui/react/alert-dialog";
+import { Button } from "@base-ui/react/button";
+import { useRef, type ReactNode } from "react";
 import styles from "./ConfirmDialog.module.css";
 
 type ConfirmDialogProps = {
@@ -17,8 +19,9 @@ type ConfirmDialogProps = {
 };
 
 /**
- * A modal confirmation (role="alertdialog") on top of anything else open,
- * including a bottom sheet. Escape and the backdrop cancel.
+ * A modal confirmation (Base UI's AlertDialog, role="alertdialog") on top of
+ * anything else open, including a bottom sheet. Escape cancels; the backdrop
+ * does not, so the choice is always explicit. Focus starts on 「취소」.
  */
 export function ConfirmDialog({
   open,
@@ -30,56 +33,35 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  const ref = useRef<HTMLDialogElement>(null);
-  const id = useId();
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <dialog
-      ref={ref}
-      role="alertdialog"
-      aria-labelledby={`${id}-title`}
-      aria-describedby={`${id}-body`}
-      className={styles.dialog}
-      onClose={(event) => {
-        // React bubbles `close` to an enclosing sheet's <dialog>, which would close it too.
-        event.stopPropagation();
-        onCancel();
-      }}
-      onClick={(event) => {
-        event.stopPropagation();
-        if (event.target === event.currentTarget) onCancel();
+    <AlertDialog.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onCancel();
       }}
     >
-      {open && (
-        <div className={styles.body}>
-          <h2 id={`${id}-title`} className={styles.title}>
-            {title}
-          </h2>
-          <p id={`${id}-body`} className={styles.text}>
-            {body}
-          </p>
+      <AlertDialog.Portal>
+        {/* Rendered over a sheet too; nested dialogs skip their backdrop by default. */}
+        <AlertDialog.Backdrop className={styles.backdrop} forceRender />
+        <AlertDialog.Popup className={styles.dialog} initialFocus={cancelRef}>
+          <AlertDialog.Title className={styles.title}>{title}</AlertDialog.Title>
+          <AlertDialog.Description className={styles.text}>{body}</AlertDialog.Description>
           {children}
           <div className={styles.actions}>
-            <button type="button" className={styles.cancel} onClick={onCancel} autoFocus>
+            <AlertDialog.Close ref={cancelRef} className={styles.cancel}>
               취소
-            </button>
-            <button
-              type="button"
+            </AlertDialog.Close>
+            <Button
               className={danger ? `${styles.confirm} ${styles.danger}` : styles.confirm}
               onClick={onConfirm}
             >
               {confirmLabel}
-            </button>
+            </Button>
           </div>
-        </div>
-      )}
-    </dialog>
+        </AlertDialog.Popup>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
   );
 }

@@ -154,6 +154,10 @@ body { font-family: var(--font-body); color: var(--text); background: var(--bg);
 }
 ```
 
+- UI 아이콘은 `lucide-react`로 그립니다([ADR 0004](../adr/0004-ui-icons-lucide-item-icons-emoji.md)). 크기는 상단 바 20~22px, 그 밖의 버튼 18~20px이고, 선 굵기는 2.25(글자 옆의 `Plus`는 2.5)입니다. 색은 `currentColor`로 버튼의 글자색을 따릅니다.
+- 일정 아이콘과 장식용 그림(🧳, 🗺️ 등)은 이모지로 둡니다.
+- 아이콘만 있는 버튼에는 `aria-label`로 이름을 붙입니다. 아이콘 SVG는 `aria-hidden`입니다.
+
 ### 4.3 일차 칩
 
 ```css
@@ -164,8 +168,8 @@ body { font-family: var(--font-body); color: var(--text); background: var(--bg);
 }
 .day-chip b    { display: block; font-family: var(--font-display); font-size: 18px; font-weight: 400; }  /* "1일차" */
 .day-chip span { font-size: 12px; color: var(--text-muted); }                                            /* "11.20 금" */
-.day-chip[aria-pressed="true"]   { background: var(--day-soft); border-color: var(--day-ink); transform: translateY(-3px); }
-.day-chip[aria-pressed="true"] b { color: var(--day-ink); }
+.day-chip[aria-selected="true"]  { background: var(--day-soft); border-color: var(--day-ink); transform: translateY(-3px); }
+.day-chip[aria-selected="true"] b { color: var(--day-ink); }
 ```
 
 칩 목록은 `display: flex; gap: 8px; overflow-x: auto;`로 가로 스크롤합니다. 각 칩에는 해당 일차의 `--day-soft`, `--day-ink`를 지정합니다.
@@ -294,7 +298,7 @@ Safari를 지원하려면 `mask`와 함께 `-webkit-mask`도 지정합니다.
 - 터치 영역은 44×44px 이상으로 합니다.
 - 포커스 링은 그림자와 분리해 `outline: 3px solid var(--primary-strong); outline-offset: 2px;`로 그립니다.
 - 일차는 색만으로 구분하지 않습니다. 칩과 헤더에 항상 "N일차" 라벨을 함께 표시합니다.
-- 일차 칩 목록은 선택 상태를 `aria-pressed`(또는 탭 패턴이면 `aria-selected`)로 노출합니다.
+- 일차 칩 목록은 탭 패턴(Base UI Tabs)으로 만들고, 선택 상태를 `aria-selected`로 노출합니다.
 
 ## 7. 말투
 

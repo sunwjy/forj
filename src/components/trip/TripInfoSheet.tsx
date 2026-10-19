@@ -1,10 +1,11 @@
 "use client";
 
+import { Button } from "@base-ui/react/button";
 import { useId, useState, type FormEvent } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { showToast } from "@/components/toast";
-import { TripFields } from "@/components/TripFields";
+import { TripFields, type TripFieldsError } from "@/components/TripFields";
 import formStyles from "@/components/TripCreateForm.module.css";
 import { validateTripInput, type Period, type TripDraft } from "@/lib/trip-input";
 import { dayChipDate } from "@/lib/trip/format";
@@ -30,7 +31,7 @@ type TripInfoSheetProps = {
   /** The rebased view: server snapshot plus pending changes. */
   trip: TripSnapshot;
   writer: TripWriter;
-  /** Changes every time the ✏️ button is pressed; `0` means not yet. */
+  /** Changes every time the edit (pencil) button is pressed; `0` means not yet. */
   openRequest: number;
   /** Shows the connection-lost badge atop the sheet (spec 7.7). */
   offline?: boolean;
@@ -71,23 +72,25 @@ export function TripInfoSheet({ trip, writer, openRequest, offline = false }: Tr
         // The list follows the refetched snapshot, so it shows the latest items.
         setRetry(period);
       } else {
-        showToast(FAILED_TOAST, [
-          { label: "다시 편집", onClick: () => open({ ...draftOf(trip), ...period }) },
-        ]);
+        showToast(FAILED_TOAST, { label: "다시 편집", onClick: () => open({ ...draftOf(trip), ...period }) });
       }
     } else if (change.kind === "update_trip_title") {
-      showToast(FAILED_TOAST, [{ label: "다시 편집", onClick: () => open({ ...draftOf(trip), title: change.title }) }]);
+      showToast(FAILED_TOAST, { label: "다시 편집", onClick: () => open({ ...draftOf(trip), title: change.title }) });
     }
   });
+
+  // Keeps the last form on screen while the sheet slides away.
+  const [shown, setShown] = useState(sheet);
+  if (sheet && sheet !== shown) setShown(sheet);
 
   return (
     <>
       <BottomSheet open={sheet !== null} onClose={() => setSheet(null)} title="여행 정보">
-        {sheet && (
+        {shown && (
           <TripInfoForm
-            key={sheet.key}
+            key={shown.key}
             trip={trip}
-            draft={sheet.draft}
+            draft={shown.draft}
             offline={offline}
             onSave={(title, period) => {
               if (title !== undefined) writer.submit({ kind: "update_trip_title", title });
@@ -133,7 +136,7 @@ function TripInfoForm({ trip, draft: initial, offline, onSave }: TripInfoFormPro
       seen.title !== now.title || seen.startDate !== now.startDate || seen.endDate !== now.endDate,
     merge: (seen: TripDraft, mine: TripDraft, now: TripDraft) => ({ base: now, ...mergeRemoteFields(seen, mine, now) }),
   });
-  const [error, setError] = useState<{ field: "title" | "period"; message: string } | null>(null);
+  const [error, setError] = useState<TripFieldsError | null>(null);
   const [pending, setPending] = useState<{ title: string | undefined; period: Period } | null>(null);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -154,8 +157,6 @@ function TripInfoForm({ trip, draft: initial, offline, onSave }: TripInfoFormPro
     onSave(newTitle, period);
   }
 
-  const errorId = `${id}-error`;
-
   return (
     <form className={formStyles.form} onSubmit={handleSubmit} noValidate>
       {offline && (
@@ -167,18 +168,13 @@ function TripInfoForm({ trip, draft: initial, offline, onSave }: TripInfoFormPro
         id={id}
         value={draft}
         onChange={setDraft}
-        error={error && { field: error.field, describedBy: errorId }}
+        error={error}
         remote={marks}
       />
       <p className={formStyles.hint}>기간을 줄이면 빠지는 날짜의 일정이 함께 삭제돼요. 저장하기 전에 한 번 더 확인해요.</p>
-      {error && (
-        <p id={errorId} className={formStyles.error} role="alert">
-          {error.message}
-        </p>
-      )}
-      <button type="submit" className={formStyles.submit}>
+      <Button type="submit" className={formStyles.submit}>
         저장
-      </button>
+      </Button>
       <PeriodConfirmDialog
         open={pending !== null}
         trip={trip}
