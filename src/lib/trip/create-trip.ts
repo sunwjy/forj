@@ -1,4 +1,4 @@
-import { rpcErrorCode, type RpcClient } from "./rpc";
+import { rpcErrorCode, type RpcClient } from "@/lib/rpc";
 import type { TripDraft } from "./trip-input";
 
 export type CreateTripResult =

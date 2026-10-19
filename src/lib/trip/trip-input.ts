@@ -3,7 +3,7 @@
  * repeats them in `create_trip`; this only gives the form early feedback.
  */
 
-import { daysBetween } from "./trip/days";
+import { daysBetween } from "./days";
 
 export const MAX_TITLE_LENGTH = 100;
 export const MAX_PERIOD_DAYS = 30;

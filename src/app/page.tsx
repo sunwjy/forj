@@ -1,4 +1,4 @@
-import { Home as HomeContent } from "@/components/Home";
+import { Home as HomeContent } from "@/components/home/Home";
 import styles from "./page.module.css";
 
 /** First screen (spec 7.1). What sits under the brand depends on this browser's recent trips. */

@@ -3,11 +3,11 @@
 import { Button } from "@base-ui/react/button";
 import Link from "next/link";
 import { use, useEffect } from "react";
-import { recordTripLookup } from "@/lib/recent-trips";
+import { recordTripLookup } from "@/lib/trip/recent-trips";
 import { localDate } from "@/lib/trip/format";
 import { useTrip } from "@/lib/trip/use-trip";
 import { useTripSignals } from "@/lib/trip/use-trip-signals";
-import { getRecentTrips } from "@/lib/use-recent-trips";
+import { getRecentTrips } from "@/lib/trip/use-recent-trips";
 import { TripNotFound } from "./TripNotFound";
 import { TripView } from "./TripView";
 import styles from "./trip.module.css";

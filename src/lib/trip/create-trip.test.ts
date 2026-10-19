@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createTrip } from "./create-trip";
-import type { RpcClient } from "./rpc";
+import type { RpcClient } from "@/lib/rpc";
 
 const input = { title: "오사카", startDate: "2026-11-20", endDate: "2026-11-23" };
 

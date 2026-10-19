@@ -1,5 +1,5 @@
 import type { Period } from "./trip-input";
-import type { TripState } from "./trip/trip-store";
+import type { TripState } from "./trip-store";
 
 /** The slice of `localStorage` recent trips need. */
 export type RecentTripsStorage = Pick<Storage, "getItem" | "setItem">;

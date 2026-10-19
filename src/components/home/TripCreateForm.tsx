@@ -3,11 +3,11 @@
 import { Button } from "@base-ui/react/button";
 import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
-import { createTrip } from "@/lib/create-trip";
+import { createTrip } from "@/lib/trip/create-trip";
 import { getSupabase } from "@/lib/supabase";
-import { validateTripInput, type TripDraft } from "@/lib/trip-input";
-import { showToast } from "./toast";
-import { TripFields, type TripFieldsError } from "./TripFields";
+import { validateTripInput, type TripDraft } from "@/lib/trip/trip-input";
+import { showToast } from "@/components/toast";
+import { TripFields, type TripFieldsError } from "@/components/trip/TripFields";
 import styles from "./TripCreateForm.module.css";
 
 export type CreatedTrip = TripDraft & { token: string };

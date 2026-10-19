@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createRecentTrips, forgetTripAtPath, recordTripLookup, type RecentTripsStorage } from "./recent-trips";
-import type { TripSnapshot } from "./trip/snapshot";
+import type { TripSnapshot } from "./snapshot";
 
 /** An in-memory stand-in for `localStorage`. */
 function memoryStorage(initial: Record<string, string> = {}): RecentTripsStorage & { data: Record<string, string> } {

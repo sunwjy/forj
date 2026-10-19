@@ -1,10 +1,10 @@
 "use client";
 
 import { Field } from "@base-ui/react/field";
-import { RemoteNote, remoteClass } from "@/components/trip/RemoteField";
-import { MAX_PERIOD_DAYS, MAX_TITLE_LENGTH, type TripDraft } from "@/lib/trip-input";
+import { RemoteNote, remoteClass } from "./RemoteField";
+import { MAX_PERIOD_DAYS, MAX_TITLE_LENGTH, type TripDraft } from "@/lib/trip/trip-input";
 import type { RemoteMark, RemoteMarks } from "@/lib/trip/remote-edit";
-import styles from "./TripCreateForm.module.css";
+import styles from "@/components/home/TripCreateForm.module.css";
 
 export type TripFieldsError = { field: "title" | "period" | "form"; message: string };
 
