@@ -19,7 +19,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className={jua.variable}>
       <body>
-        {children}
+        {/* Its own stacking context, so Base UI's portaled sheets and dialogs always sit above the page. */}
+        <div className="root">{children}</div>
         <Toaster />
       </body>
     </html>

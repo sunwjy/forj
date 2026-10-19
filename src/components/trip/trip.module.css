@@ -102,7 +102,6 @@
   margin: 0 -20px;
   padding: 6px 20px 14px;
   scrollbar-width: none;
-  list-style: none;
 }
 
 .chip {
@@ -129,13 +128,13 @@
   color: var(--text-muted);
 }
 
-.chip[aria-pressed="true"] {
+.chip[aria-selected="true"] {
   background: var(--day-soft);
   border-color: var(--day-ink);
   transform: translateY(-3px);
 }
 
-.chip[aria-pressed="true"] b {
+.chip[aria-selected="true"] b {
   color: var(--day-ink);
 }
 

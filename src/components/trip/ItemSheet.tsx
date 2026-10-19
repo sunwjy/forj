@@ -1,5 +1,7 @@
 "use client";
 
+import { Toggle } from "@base-ui/react/toggle";
+import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { useId, useState, type FormEvent } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -52,9 +54,15 @@ type ItemSheetProps = {
 
 /** The add/edit item bottom sheet (spec 7.4). */
 export function ItemSheet({ target, days, items, onClose, ...actions }: ItemSheetProps) {
+  // Keeps the last form on screen, as it was, while the sheet slides away;
+  // a just-saved item would otherwise show up in it as an overlap.
+  const [shown, setShown] = useState({ target, items });
+  if (target && (target !== shown.target || items !== shown.items)) setShown({ target, items });
+  const form = shown.target;
+
   return (
-    <BottomSheet open={target !== null} onClose={onClose} title={target?.mode === "edit" ? "일정 편집" : "새 일정"}>
-      {target && <ItemForm key={target.key} target={target} days={days} items={items} onClose={onClose} {...actions} />}
+    <BottomSheet open={target !== null} onClose={onClose} title={form?.mode === "edit" ? "일정 편집" : "새 일정"}>
+      {form && <ItemForm key={form.key} target={form} days={days} items={shown.items} onClose={onClose} {...actions} />}
     </BottomSheet>
   );
 }
@@ -166,16 +174,19 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
       <fieldset className={fieldClass(remote("emoji"))}>
         <legend>아이콘</legend>
         <div className={styles.emojis}>
-          {SUGGESTED_EMOJI.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              aria-pressed={draft.emoji === emoji}
-              onClick={() => set("emoji", draft.emoji === emoji ? "" : emoji)}
-            >
-              {emoji}
-            </button>
-          ))}
+          <ToggleGroup
+            className={styles.emojiGroup}
+            aria-label="추천 이모지"
+            value={SUGGESTED_EMOJI.includes(draft.emoji) ? [draft.emoji] : []}
+            // Pressing the chosen emoji again clears it.
+            onValueChange={(value) => set("emoji", value[0] ?? "")}
+          >
+            {SUGGESTED_EMOJI.map((emoji) => (
+              <Toggle key={emoji} value={emoji} className={styles.emoji}>
+                {emoji}
+              </Toggle>
+            ))}
+          </ToggleGroup>
           <input
             className={styles.emojiInput}
             value={customEmoji}
@@ -256,17 +267,21 @@ function ItemForm({ target, days, items, offline, onClose, onCreate, onUpdate, o
                   }`
                 : "소요 시간"}
             </span>
-            {DURATIONS.map((minutes) => (
-              <button
-                key={minutes}
-                type="button"
-                className={styles.chip}
-                aria-pressed={draft.end_time === addMinutes(draft.start_time, minutes)}
-                onClick={() => set("end_time", addMinutes(draft.start_time, minutes))}
-              >
-                {durationLabel(minutes)}
-              </button>
-            ))}
+            <ToggleGroup
+              className={styles.durationGroup}
+              aria-label="소요 시간"
+              value={DURATIONS.filter((minutes) => draft.end_time === addMinutes(draft.start_time, minutes)).map(String)}
+              onValueChange={(value) => {
+                // Pressing the current duration again keeps it rather than clearing the end time.
+                if (value[0]) set("end_time", addMinutes(draft.start_time, Number(value[0])));
+              }}
+            >
+              {DURATIONS.map((minutes) => (
+                <Toggle key={minutes} value={String(minutes)} className={styles.chip}>
+                  {durationLabel(minutes)}
+                </Toggle>
+              ))}
+            </ToggleGroup>
             <button
               type="button"
               className={styles.chip}

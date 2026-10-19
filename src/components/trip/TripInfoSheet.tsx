@@ -71,23 +71,25 @@ export function TripInfoSheet({ trip, writer, openRequest, offline = false }: Tr
         // The list follows the refetched snapshot, so it shows the latest items.
         setRetry(period);
       } else {
-        showToast(FAILED_TOAST, [
-          { label: "다시 편집", onClick: () => open({ ...draftOf(trip), ...period }) },
-        ]);
+        showToast(FAILED_TOAST, { label: "다시 편집", onClick: () => open({ ...draftOf(trip), ...period }) });
       }
     } else if (change.kind === "update_trip_title") {
-      showToast(FAILED_TOAST, [{ label: "다시 편집", onClick: () => open({ ...draftOf(trip), title: change.title }) }]);
+      showToast(FAILED_TOAST, { label: "다시 편집", onClick: () => open({ ...draftOf(trip), title: change.title }) });
     }
   });
+
+  // Keeps the last form on screen while the sheet slides away.
+  const [shown, setShown] = useState(sheet);
+  if (sheet && sheet !== shown) setShown(sheet);
 
   return (
     <>
       <BottomSheet open={sheet !== null} onClose={() => setSheet(null)} title="여행 정보">
-        {sheet && (
+        {shown && (
           <TripInfoForm
-            key={sheet.key}
+            key={shown.key}
             trip={trip}
-            draft={sheet.draft}
+            draft={shown.draft}
             offline={offline}
             onSave={(title, period) => {
               if (title !== undefined) writer.submit({ kind: "update_trip_title", title });

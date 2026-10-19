@@ -1,5 +1,6 @@
 "use client";
 
+import { Tabs } from "@base-ui/react/tabs";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { showToast } from "@/components/toast";
@@ -74,11 +75,11 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
     };
 
     if (code === "ITEM_NOT_FOUND") {
-      showToast(DELETED_TOAST, draft ? [{ label: "새 일정으로 추가", onClick: () => openNew(draft) }] : []);
+      showToast(DELETED_TOAST, draft && { label: "새 일정으로 추가", onClick: () => openNew(draft) });
     } else if (code === "DATE_OUT_OF_RANGE") {
-      showToast(OUT_OF_RANGE_TOAST, current || draft ? [{ label: "다시 편집", onClick: editAgain }] : []);
+      showToast(OUT_OF_RANGE_TOAST, current || draft ? { label: "다시 편집", onClick: editAgain } : undefined);
     } else {
-      showToast(FAILED_TOAST, current ? [{ label: "다시 편집", onClick: editAgain }] : []);
+      showToast(FAILED_TOAST, current && { label: "다시 편집", onClick: editAgain });
     }
   });
 
@@ -120,49 +121,45 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
         <p className={`${styles.period} num`}>{periodLabel(trip.start_date, trip.end_date)}</p>
       </header>
 
-      <ul className={styles.chips} aria-label="일차">
-        {days.map((day) => (
-          <li key={day.date}>
-            <button
-              type="button"
-              className={`${styles.chip} ${dayClass(day)}`}
-              aria-pressed={day.date === selected.date}
-              onClick={() => setPicked(day.date)}
-            >
+      {/* Day chips are tabs: arrow keys move between days, Enter or Space shows one. */}
+      <Tabs.Root value={selected.date} onValueChange={(date: string) => setPicked(date)}>
+        <Tabs.List className={styles.chips} aria-label="일차">
+          {days.map((day) => (
+            <Tabs.Tab key={day.date} value={day.date} className={`${styles.chip} ${dayClass(day)}`}>
               <b>{day.number}일차</b>
               <span className="num">{dayChipDate(day.date)}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
 
-      <section key={selected.date} className={dayClass(selected)} aria-label={`${selected.number}일차 일정`}>
-        {timed.length === 0 && untimed.length === 0 && (
-          <p className={styles.empty}>아직 일정이 없어요.</p>
-        )}
-        {timed.length > 0 && (
-          <ol className={styles.group}>
-            {timed.map((item, k) => (
-              <TimelineRow key={item.id} item={item} order={k} onOpen={() => openEdit(item)} />
-            ))}
-          </ol>
-        )}
-        {untimed.length > 0 && (
-          <>
-            <h2 className={styles.groupLabel}>시간 미정</h2>
+        <Tabs.Panel key={selected.date} value={selected.date} className={dayClass(selected)}>
+          {timed.length === 0 && untimed.length === 0 && (
+            <p className={styles.empty}>아직 일정이 없어요.</p>
+          )}
+          {timed.length > 0 && (
             <ol className={styles.group}>
-              {untimed.map((item, k) => (
-                <TimelineRow
-                  key={item.id}
-                  item={item}
-                  order={timed.length + k}
-                  onOpen={() => openEdit(item)}
-                />
+              {timed.map((item, k) => (
+                <TimelineRow key={item.id} item={item} order={k} onOpen={() => openEdit(item)} />
               ))}
             </ol>
-          </>
-        )}
-      </section>
+          )}
+          {untimed.length > 0 && (
+            <>
+              <h2 className={styles.groupLabel}>시간 미정</h2>
+              <ol className={styles.group}>
+                {untimed.map((item, k) => (
+                  <TimelineRow
+                    key={item.id}
+                    item={item}
+                    order={timed.length + k}
+                    onOpen={() => openEdit(item)}
+                  />
+                ))}
+              </ol>
+            </>
+          )}
+        </Tabs.Panel>
+      </Tabs.Root>
 
       <button type="button" className={styles.fab} onClick={() => openNew(blankDraft(selected.date))}>
         ＋ 일정 추가

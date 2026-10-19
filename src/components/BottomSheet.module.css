@@ -1,26 +1,79 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  min-height: 100dvh;
+  background: rgb(var(--shadow-tint) / 0.35);
+  /* Fades out as the sheet is swiped down. */
+  opacity: calc(1 - var(--drawer-swipe-progress));
+  transition: opacity 380ms var(--ease-out);
+}
+
+/* iOS 26+ Safari draws under its toolbars; only an absolute backdrop covers them. */
+@supports (-webkit-touch-callout: none) {
+  .backdrop {
+    position: absolute;
+  }
+}
+
+.backdrop[data-starting-style],
+.backdrop[data-ending-style] {
+  opacity: 0;
+}
+
+.backdrop[data-swiping] {
+  transition-duration: 0ms;
+}
+
+.viewport {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
 .sheet {
-  margin: auto auto 0;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 560px;
   max-height: 88dvh;
-  padding: 0;
-  border: 0;
   border-radius: var(--r-lg) var(--r-lg) 0 0;
   background: var(--bg);
   color: var(--text);
-  overflow-y: auto;
+  outline: 0;
+  transform: translateY(var(--drawer-swipe-movement-y));
+  transition: transform 380ms var(--spring);
 }
 
-.sheet[open] {
-  animation: sheet-up 380ms var(--spring) both;
+.sheet[data-starting-style],
+.sheet[data-ending-style] {
+  transform: translateY(100%);
 }
 
-.sheet::backdrop {
-  background: rgb(var(--shadow-tint) / 0.35);
+.sheet[data-ending-style] {
+  transition-timing-function: var(--ease-out);
+  transition-duration: calc(var(--drawer-swipe-strength) * 380ms);
+}
+
+.sheet[data-swiping] {
+  transition-duration: 0ms;
+  user-select: none;
+}
+
+/* The grip and title stay put while the body scrolls, and give the swipe something to hold. */
+.header {
+  flex: none;
+  padding: 10px 20px 0;
+  touch-action: none;
 }
 
 .body {
-  padding: 10px 20px calc(28px + env(safe-area-inset-bottom));
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 20px calc(28px + env(safe-area-inset-bottom));
 }
 
 .grip {
@@ -35,10 +88,4 @@
   font-size: 18px;
   font-weight: 700;
   margin-bottom: 8px;
-}
-
-@keyframes sheet-up {
-  from {
-    transform: translateY(100%);
-  }
 }

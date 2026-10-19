@@ -73,11 +73,17 @@ body {
 }
 
 body {
+  /* Lets iOS 26+ Safari stretch absolute backdrops over the whole visual viewport (Base UI). */
+  position: relative;
   font-family: var(--font-body);
   color: var(--text);
   background: var(--bg);
   word-break: keep-all;
   -webkit-font-smoothing: antialiased;
+}
+
+.root {
+  isolation: isolate;
 }
 
 button,

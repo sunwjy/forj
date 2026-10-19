@@ -48,7 +48,7 @@ export function Home() {
     const recent = getRecentTrips();
     const forgotten = recent.forget(token);
     if (!forgotten) return;
-    showToast(FORGOTTEN_TOAST, [{ label: "되돌리기", onClick: () => recent.restore(forgotten) }]);
+    showToast(FORGOTTEN_TOAST, { label: "되돌리기", onClick: () => recent.restore(forgotten) });
   }
 
   return (
