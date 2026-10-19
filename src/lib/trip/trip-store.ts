@@ -14,7 +14,7 @@
  * Framework-free so it can be tested with fake timers; `useTrip` binds it to React.
  */
 
-import { changeKind, rebase, type TripChange } from "./changes";
+import { changeDefinition, rebase, type TripChange } from "./changes";
 import type { FetchTripResult } from "./fetch-trip";
 import type { SendOutcome } from "./send-change";
 import type { ItemSnapshot, TripSnapshot } from "./snapshot";
@@ -221,7 +221,7 @@ export function createTripStore({ fetchSnapshot, send }: TripStoreDeps): TripSto
     const entry: Entry = { change };
     queue = [...queue, entry];
     const after = view();
-    const target = changeKind(change).item;
+    const target = changeDefinition(change).item;
     if (target) {
       const id = target.id(change);
       entry.item = (target.from === "before" ? before : after)?.items.find((i) => i.id === id);

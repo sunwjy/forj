@@ -64,7 +64,9 @@ describe("sendChange", () => {
   it("updates an item with only its patch", async () => {
     const { client, calls } = clientAnswering(ok);
     await sendChange(client, token, { kind: "update_item", id: item.id, patch: { memo: null } });
-    expect(calls).toMatchObject([{ fn: "update_item", args: { token, item_id: item.id, patch: { memo: null } } }]);
+    expect(calls).toEqual([
+      { fn: "update_item", args: { token, item_id: item.id, patch: { memo: null } }, signal: expect.anything() },
+    ]);
   });
 
   it("sends the patch's field names as the server spells them", async () => {
@@ -90,7 +92,7 @@ describe("sendChange", () => {
   it("deletes an item", async () => {
     const { client, calls } = clientAnswering(ok);
     await sendChange(client, token, { kind: "delete_item", id: item.id });
-    expect(calls).toMatchObject([{ fn: "delete_item", args: { token, item_id: item.id } }]);
+    expect(calls).toEqual([{ fn: "delete_item", args: { token, item_id: item.id }, signal: expect.anything() }]);
   });
 
   it("changes the trip title", async () => {

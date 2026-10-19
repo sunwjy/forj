@@ -1,6 +1,6 @@
 import { rpcErrorCode, type RpcClient } from "@/lib/rpc";
 import type { ShareToken } from "./branded";
-import { changeKind, type TripChange } from "./changes";
+import { changeDefinition, type TripChange } from "./changes";
 
 /**
  * How one attempt to send a change ended (spec 6.3, 6.5).
@@ -18,23 +18,27 @@ function serverName(name: string): string {
   return name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && Object.getPrototypeOf(value) === Object.prototype;
+/** Renames the keys of `fields` the way the server spells them. */
+function serverFields(fields: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(fields).map(([name, value]) => [serverName(name), value]));
 }
 
-/** Renames the keys of `args`, and of objects nested in it (`patch`), the way the server spells them. */
-function serverArgs(args: Record<string, unknown>): Record<string, unknown> {
-  return Object.fromEntries(
-    Object.entries(args).map(([name, value]) => [serverName(name), isPlainObject(value) ? serverArgs(value) : value]),
-  );
+/**
+ * Renames the argument names in `args` the way the server spells them, and the
+ * field names inside `update_item`'s `patch`. Other values are sent as they are.
+ */
+function serverArgs(name: string, args: Record<string, unknown>): Record<string, unknown> {
+  const renamed = serverFields(args);
+  if (name === "update_item") renamed.patch = serverFields(args.patch as Record<string, unknown>);
+  return renamed;
 }
 
 /** Sends one change through its RPC (spec 5.3) and classifies the result. */
 export async function sendChange(client: RpcClient, token: ShareToken, change: TripChange): Promise<SendOutcome> {
-  const { name, args } = changeKind(change).rpc(change);
+  const { name, args } = changeDefinition(change).rpc(change);
   let response: Awaited<ReturnType<RpcClient["rpc"]>>;
   try {
-    response = await client.rpc(name, { token, ...serverArgs(args) }).abortSignal(AbortSignal.timeout(SEND_TIMEOUT_MS));
+    response = await client.rpc(name, { token, ...serverArgs(name, args) }).abortSignal(AbortSignal.timeout(SEND_TIMEOUT_MS));
   } catch {
     return { kind: "retry" };
   }

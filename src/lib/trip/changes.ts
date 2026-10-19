@@ -13,7 +13,7 @@ export type ItemPatch = Partial<ItemFields>;
 
 /**
  * One pending write, in the shape it is shown optimistically and sent to the
- * server. Each kind maps to one RPC (spec 5.3); `CHANGE_KINDS` defines how.
+ * server. Each kind maps to one RPC (spec 5.3); `CHANGE_DEFINITIONS` defines how.
  */
 export type TripChange =
   /** `item` carries the client-generated id and an optimistic `createdAt`. */
@@ -28,11 +28,12 @@ export type TripChange =
   | { kind: "set_trip_dates"; startDate: IsoDate; endDate: IsoDate; confirmedDeletedIds: string[] };
 
 /** Everything the client does differently for one kind of change. */
-export type ChangeKind<C extends TripChange> = {
+export type ChangeDefinition<C extends TripChange> = {
   /**
    * The RPC that sends the change (spec 5.3) and its arguments other than
    * `token`. Argument names are camelCase; `sendChange` spells them the way
-   * the server does (`itemId` → `item_id`), including the keys of nested objects.
+   * the server does (`itemId` → `item_id`), and likewise the field names in
+   * `update_item`'s `patch`. Nothing else nested is renamed.
    */
   rpc: (change: C) => { name: string; args: Record<string, unknown> };
   /** Replays the change on a snapshot (`rebase`). Must not modify `trip`. */
@@ -45,10 +46,10 @@ export type ChangeKind<C extends TripChange> = {
   item: { id: (change: C) => string; from: "before" | "after" } | undefined;
 };
 
-type ChangeKinds = { [K in TripChange["kind"]]: ChangeKind<Extract<TripChange, { kind: K }>> };
+type ChangeDefinitions = { [K in TripChange["kind"]]: ChangeDefinition<Extract<TripChange, { kind: K }>> };
 
 /** Every kind's definition. A kind added to `TripChange` must be defined here. */
-export const CHANGE_KINDS: ChangeKinds = {
+export const CHANGE_DEFINITIONS: ChangeDefinitions = {
   create_item: {
     rpc: ({ item: { id, date, title, memo, startTime, endTime, emoji } }) => ({
       name: "create_item",
@@ -91,14 +92,14 @@ export const CHANGE_KINDS: ChangeKinds = {
 };
 
 /** The definition of `change`'s kind. */
-export function changeKind<C extends TripChange>(change: C): ChangeKind<C> {
+export function changeDefinition<C extends TripChange>(change: C): ChangeDefinition<C> {
   // TypeScript cannot correlate `change.kind` with the indexed definition.
-  return CHANGE_KINDS[change.kind] as unknown as ChangeKind<C>;
+  return CHANGE_DEFINITIONS[change.kind] as unknown as ChangeDefinition<C>;
 }
 
 /** The id of the item a change writes, or `undefined` for a change to the trip itself. */
 export function changedItemId(change: TripChange): string | undefined {
-  return changeKind(change).item?.id(change);
+  return changeDefinition(change).item?.id(change);
 }
 
 /**
@@ -117,6 +118,6 @@ export function optimisticCreatedAt(now: Date): string {
  */
 export function rebase(snapshot: TripSnapshot, changes: readonly TripChange[]): TripSnapshot {
   if (changes.length === 0) return snapshot;
-  const trip = changes.reduce((view, change) => changeKind(change).apply(view, change), snapshot);
+  const trip = changes.reduce((view, change) => changeDefinition(change).apply(view, change), snapshot);
   return { ...trip, items: sortItems(trip.items) };
 }
