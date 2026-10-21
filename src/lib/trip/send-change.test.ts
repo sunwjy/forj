@@ -2,6 +2,7 @@ import type { RpcClient } from "@/lib/rpc";
 import { describe, expect, it } from "vitest";
 import { sendChange } from "./send-change";
 import type { ItemSnapshot } from "./snapshot";
+import { hhMm, isoDate, shareToken } from "./test-values";
 
 type Response = { data: unknown; error: unknown; status: number };
 
@@ -24,24 +25,24 @@ function clientAnswering(answer: () => Response | Promise<Response>) {
 }
 
 const ok = () => ({ data: null, error: null, status: 204 });
-const token = "devExampleTrip00000000";
+const token = shareToken("devExampleTrip00000000");
 
 const item: ItemSnapshot = {
   id: "00000000-0000-4000-8000-000000000999",
-  date: "2026-11-20",
+  date: isoDate("2026-11-20"),
   title: "라멘",
   memo: null,
-  start_time: "12:00",
-  end_time: null,
+  startTime: hhMm("12:00"),
+  endTime: null,
   emoji: "🍜",
-  created_at: "2026-10-17T00:00:00.000000Z",
+  createdAt: "2026-10-17T00:00:00.000000Z",
 };
 
 describe("sendChange", () => {
   it("creates an item with its client-generated id and every field", async () => {
     const { client, calls } = clientAnswering(ok);
     await expect(sendChange(client, token, { kind: "create_item", item })).resolves.toEqual({ kind: "ok" });
-    expect(calls).toMatchObject([
+    expect(calls).toEqual([
       {
         fn: "create_item",
         args: {
@@ -54,6 +55,7 @@ describe("sendChange", () => {
           end_time: null,
           emoji: "🍜",
         },
+        signal: expect.anything(),
       },
     ]);
     expect(calls[0].signal).toBeInstanceOf(AbortSignal);
@@ -62,13 +64,35 @@ describe("sendChange", () => {
   it("updates an item with only its patch", async () => {
     const { client, calls } = clientAnswering(ok);
     await sendChange(client, token, { kind: "update_item", id: item.id, patch: { memo: null } });
-    expect(calls).toMatchObject([{ fn: "update_item", args: { token, item_id: item.id, patch: { memo: null } } }]);
+    expect(calls).toEqual([
+      { fn: "update_item", args: { token, item_id: item.id, patch: { memo: null } }, signal: expect.anything() },
+    ]);
+  });
+
+  it("sends the patch's field names as the server spells them", async () => {
+    const { client, calls } = clientAnswering(ok);
+    await sendChange(client, token, {
+      kind: "update_item",
+      id: item.id,
+      patch: { date: isoDate("2026-11-21"), startTime: hhMm("23:00"), endTime: hhMm("01:00"), emoji: null },
+    });
+    expect(calls).toEqual([
+      {
+        fn: "update_item",
+        args: {
+          token,
+          item_id: item.id,
+          patch: { date: "2026-11-21", start_time: "23:00", end_time: "01:00", emoji: null },
+        },
+        signal: expect.anything(),
+      },
+    ]);
   });
 
   it("deletes an item", async () => {
     const { client, calls } = clientAnswering(ok);
     await sendChange(client, token, { kind: "delete_item", id: item.id });
-    expect(calls).toMatchObject([{ fn: "delete_item", args: { token, item_id: item.id } }]);
+    expect(calls).toEqual([{ fn: "delete_item", args: { token, item_id: item.id }, signal: expect.anything() }]);
   });
 
   it("changes the trip title", async () => {
@@ -81,9 +105,9 @@ describe("sendChange", () => {
     const { client, calls } = clientAnswering(ok);
     await sendChange(client, token, {
       kind: "set_trip_dates",
-      start_date: "2026-11-20",
-      end_date: "2026-11-21",
-      deleted_ids: [item.id],
+      startDate: isoDate("2026-11-20"),
+      endDate: isoDate("2026-11-21"),
+      confirmedDeletedIds: [item.id],
     });
     expect(calls).toEqual([
       {

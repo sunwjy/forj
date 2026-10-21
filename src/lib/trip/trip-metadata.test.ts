@@ -1,6 +1,6 @@
 import type { RpcClient } from "@/lib/rpc";
 import { describe, expect, it } from "vitest";
-import type { TripSnapshot } from "./snapshot";
+import { shareToken } from "./test-values";
 import { tripMetadata } from "./trip-metadata";
 
 /** A stand-in for the Supabase client at the network boundary. */
@@ -8,7 +8,8 @@ function clientReturning(result: { data: unknown; error: unknown }) {
   return { rpc: async () => result } as unknown as RpcClient;
 }
 
-const snapshot: TripSnapshot = {
+/** `get_trip`'s response, exactly as the server sends it. */
+const response = {
   title: "후쿠오카 먹방 여행",
   start_date: "2026-11-20",
   end_date: "2026-11-23",
@@ -17,9 +18,9 @@ const snapshot: TripSnapshot = {
 
 describe("tripMetadata", () => {
   it("puts the trip's title and period into the link preview", async () => {
-    const client = clientReturning({ data: snapshot, error: null });
+    const client = clientReturning({ data: response, error: null });
 
-    await expect(tripMetadata("devExampleTrip00000000", client)).resolves.toEqual({
+    await expect(tripMetadata(shareToken("devExampleTrip00000000"), client)).resolves.toEqual({
       title: "후쿠오카 먹방 여행",
       description: "11.20 (금) – 11.23 (월) · 3박 4일",
       openGraph: {
@@ -35,7 +36,7 @@ describe("tripMetadata", () => {
       error: { code: "P0001", message: "TRIP_NOT_FOUND", details: "no trip has this share token" },
     });
 
-    await expect(tripMetadata("noSuchTripToken0000000", client)).resolves.toBe("not_found");
+    await expect(tripMetadata(shareToken("noSuchTripToken0000000"), client)).resolves.toBe("not_found");
   });
 
   it("falls back to the app's own preview when the trip cannot be loaded", async () => {
@@ -44,6 +45,6 @@ describe("tripMetadata", () => {
       error: { code: "", message: "TypeError: fetch failed", details: "" },
     });
 
-    await expect(tripMetadata("devExampleTrip00000000", client)).resolves.toEqual({});
+    await expect(tripMetadata(shareToken("devExampleTrip00000000"), client)).resolves.toEqual({});
   });
 });

@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { getSupabase } from "@/lib/supabase";
+import type { ShareToken } from "./branded";
 import { createTripSignals, type TripSignalsDeps } from "./trip-signals";
 
 /** The public channel the DB triggers broadcast to (spec 5.6, ADR 0002). */
-function tripChannel(token: string): TripSignalsDeps["channel"] {
+function tripChannel(token: ShareToken): TripSignalsDeps["channel"] {
   return ({ onChanged, onStatus }) => {
     const supabase = getSupabase();
     const channel = supabase
@@ -38,7 +39,7 @@ const pageEvents: TripSignalsDeps["page"] = ({ onVisible, onOnline, onOffline })
  * Refetches the trip when someone changes it, and reports whether the realtime
  * channel is down (spec 6.4, 7.7). `reload` should be stable.
  */
-export function useTripSignals(token: string, reload: () => void): { disconnected: boolean } {
+export function useTripSignals(token: ShareToken, reload: () => void): { disconnected: boolean } {
   const [disconnected, setDisconnected] = useState(false);
 
   useEffect(() => {

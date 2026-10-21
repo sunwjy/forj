@@ -1,6 +1,7 @@
+import type { IsoDate } from "./branded";
 import type { ItemSnapshot } from "./snapshot";
 
-type Sortable = Pick<ItemSnapshot, "id" | "date" | "start_time" | "created_at">;
+type Sortable = Pick<ItemSnapshot, "id" | "date" | "startTime" | "createdAt">;
 
 function compareText(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
@@ -8,17 +9,17 @@ function compareText(a: string, b: string): number {
 
 /**
  * The one ordering shared by server and client:
- * `date, start_time nulls last, created_at, id` (spec 2.4).
+ * `date, startTime nulls last, createdAt, id` (spec 2.4).
  * Every field is a fixed-width string, so string order is value order.
  */
 export function compareItems(a: Sortable, b: Sortable): number {
   if (a.date !== b.date) return compareText(a.date, b.date);
-  if (a.start_time !== b.start_time) {
-    if (a.start_time === null) return 1;
-    if (b.start_time === null) return -1;
-    return compareText(a.start_time, b.start_time);
+  if (a.startTime !== b.startTime) {
+    if (a.startTime === null) return 1;
+    if (b.startTime === null) return -1;
+    return compareText(a.startTime, b.startTime);
   }
-  if (a.created_at !== b.created_at) return compareText(a.created_at, b.created_at);
+  if (a.createdAt !== b.createdAt) return compareText(a.createdAt, b.createdAt);
   return compareText(a.id, b.id);
 }
 
@@ -35,11 +36,11 @@ export type DayTimeline<T> = {
 };
 
 /** One day's items, split into the timeline and the "시간 미정" group. */
-export function dayTimeline<T extends Sortable>(items: readonly T[], date: string): DayTimeline<T> {
+export function dayTimeline<T extends Sortable>(items: readonly T[], date: IsoDate): DayTimeline<T> {
   const ofDay = sortItems(items.filter((i) => i.date === date));
   return {
-    timed: ofDay.filter((i) => i.start_time !== null),
-    untimed: ofDay.filter((i) => i.start_time === null),
+    timed: ofDay.filter((i) => i.startTime !== null),
+    untimed: ofDay.filter((i) => i.startTime === null),
   };
 }
 
@@ -47,6 +48,6 @@ export function dayTimeline<T extends Sortable>(items: readonly T[], date: strin
  * An end time at or before the start time is read as the next day and shown
  * with "+1" (spec 2.3).
  */
-export function endsNextDay(item: Pick<ItemSnapshot, "start_time" | "end_time">): boolean {
-  return item.start_time !== null && item.end_time !== null && item.end_time <= item.start_time;
+export function endsNextDay(item: Pick<ItemSnapshot, "startTime" | "endTime">): boolean {
+  return item.startTime !== null && item.endTime !== null && item.endTime <= item.startTime;
 }

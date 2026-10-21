@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { TripLoading, TripScreen } from "@/components/trip/TripScreen";
+import { parseShareToken } from "@/lib/trip/branded";
 import { tripMetadata } from "@/lib/trip/trip-metadata";
 
 /**
@@ -10,7 +11,9 @@ import { tripMetadata } from "@/lib/trip/trip-metadata";
  * trip answers a real HTTP 404.
  */
 export async function generateMetadata({ params }: PageProps<"/t/[token]">): Promise<Metadata> {
-  const { token } = await params;
+  const token = parseShareToken((await params).token);
+  // No trip has a token of another shape: answer 404 without asking the server.
+  if (!token) notFound();
   const metadata = await tripMetadata(token);
   if (metadata === "not_found") notFound();
   return metadata;

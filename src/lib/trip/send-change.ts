@@ -1,5 +1,6 @@
 import { rpcErrorCode, type RpcClient } from "@/lib/rpc";
-import type { TripChange } from "./changes";
+import type { ShareToken } from "./branded";
+import { changeDefinition, type TripChange } from "./changes";
 
 /**
  * How one attempt to send a change ended (spec 6.3, 6.5).
@@ -12,31 +13,32 @@ export type SendOutcome = { kind: "ok" } | { kind: "rejected"; code: string } | 
 
 export const SEND_TIMEOUT_MS = 10_000;
 
-function rpcCall(token: string, change: TripChange): [string, Record<string, unknown>] {
-  switch (change.kind) {
-    case "create_item": {
-      const { id, date, title, memo, start_time, end_time, emoji } = change.item;
-      return ["create_item", { token, id, date, title, memo, start_time, end_time, emoji }];
-    }
-    case "update_item":
-      return ["update_item", { token, item_id: change.id, patch: change.patch }];
-    case "delete_item":
-      return ["delete_item", { token, item_id: change.id }];
-    case "update_trip_title":
-      return ["update_trip_title", { token, title: change.title }];
-    case "set_trip_dates": {
-      const { start_date, end_date, deleted_ids } = change;
-      return ["set_trip_dates", { token, start_date, end_date, confirmed_deleted_ids: deleted_ids }];
-    }
-  }
+/** `startTime` → `start_time`: how the server spells an argument or field name. */
+function serverName(name: string): string {
+  return name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}
+
+/** Renames the keys of `fields` the way the server spells them. */
+function serverFields(fields: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(fields).map(([name, value]) => [serverName(name), value]));
+}
+
+/**
+ * Renames the argument names in `args` the way the server spells them, and the
+ * field names inside `update_item`'s `patch`. Other values are sent as they are.
+ */
+function serverArgs(name: string, args: Record<string, unknown>): Record<string, unknown> {
+  const renamed = serverFields(args);
+  if (name === "update_item") renamed.patch = serverFields(args.patch as Record<string, unknown>);
+  return renamed;
 }
 
 /** Sends one change through its RPC (spec 5.3) and classifies the result. */
-export async function sendChange(client: RpcClient, token: string, change: TripChange): Promise<SendOutcome> {
-  const [fn, args] = rpcCall(token, change);
+export async function sendChange(client: RpcClient, token: ShareToken, change: TripChange): Promise<SendOutcome> {
+  const { name, args } = changeDefinition(change).rpc(change);
   let response: Awaited<ReturnType<RpcClient["rpc"]>>;
   try {
-    response = await client.rpc(fn, args).abortSignal(AbortSignal.timeout(SEND_TIMEOUT_MS));
+    response = await client.rpc(name, { token, ...serverArgs(name, args) }).abortSignal(AbortSignal.timeout(SEND_TIMEOUT_MS));
   } catch {
     return { kind: "retry" };
   }

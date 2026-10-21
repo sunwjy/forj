@@ -4,6 +4,7 @@
  * every check except the grapheme one (spec 5.4).
  */
 
+import { parseHhMm, parseIsoDate, type IsoDate } from "./branded";
 import type { ItemFields, ItemPatch } from "./changes";
 import type { ItemSnapshot } from "./snapshot";
 
@@ -12,16 +13,19 @@ export const MAX_MEMO_LENGTH = 2000;
 /** The server's cap on the emoji field, in code points (spec 5.4). */
 export const MAX_EMOJI_CODE_POINTS = 16;
 
-/** The sheet's form state. Empty optional fields are "". */
+/** Shown when an item's date is not one of the trip's days (`DATE_OUT_OF_RANGE`). */
+export const OUT_OF_RANGE_MESSAGE = "여행 기간에서 빠진 날짜예요";
+
+/** The sheet's form state, as typed. Empty optional fields are "". */
 export type ItemDraft = {
   emoji: string;
   title: string;
   /** `YYYY-MM-DD` */
   date: string;
   /** `HH:MM` or "" */
-  start_time: string;
+  startTime: string;
   /** `HH:MM` or "" */
-  end_time: string;
+  endTime: string;
   memo: string;
 };
 
@@ -31,8 +35,8 @@ export type ItemDraftResult =
   | { ok: true; fields: ItemFields }
   | { ok: false; field: ItemDraftField; message: string };
 
-export function blankDraft(date: string): ItemDraft {
-  return { emoji: "", title: "", date, start_time: "", end_time: "", memo: "" };
+export function blankDraft(date: IsoDate): ItemDraft {
+  return { emoji: "", title: "", date, startTime: "", endTime: "", memo: "" };
 }
 
 export function draftFromItem(item: ItemFields): ItemDraft {
@@ -40,15 +44,15 @@ export function draftFromItem(item: ItemFields): ItemDraft {
     emoji: item.emoji ?? "",
     title: item.title,
     date: item.date,
-    start_time: item.start_time ?? "",
-    end_time: item.end_time ?? "",
+    startTime: item.startTime ?? "",
+    endTime: item.endTime ?? "",
     memo: item.memo ?? "",
   };
 }
 
 export function itemFields(item: ItemSnapshot): ItemFields {
-  const { date, title, memo, start_time, end_time, emoji } = item;
-  return { date, title, memo, start_time, end_time, emoji };
+  const { date, title, memo, startTime, endTime, emoji } = item;
+  return { date, title, memo, startTime, endTime, emoji };
 }
 
 /** Lengths are counted in code points, like `char_length` on the server (spec 2.3). */
@@ -84,7 +88,16 @@ export function validateItemDraft(draft: ItemDraft): ItemDraftResult {
     return { ok: false, field: "title", message: `제목은 ${MAX_ITEM_TITLE_LENGTH}자까지 쓸 수 있어요.` };
   }
 
-  if (draft.end_time && !draft.start_time) {
+  // The day select and time inputs cannot produce a malformed value, so these
+  // checks reuse copy the screen already shows rather than adding new copy.
+  const date = parseIsoDate(draft.date);
+  if (!date) {
+    return { ok: false, field: "time", message: OUT_OF_RANGE_MESSAGE };
+  }
+
+  const startTime = draft.startTime ? parseHhMm(draft.startTime) : null;
+  const endTime = draft.endTime ? parseHhMm(draft.endTime) : null;
+  if ((draft.endTime && !draft.startTime) || (draft.startTime && !startTime) || (draft.endTime && !endTime)) {
     return { ok: false, field: "time", message: "종료 시각만 둘 수는 없어요. 시작 시각을 먼저 골라 주세요." };
   }
 
@@ -97,11 +110,11 @@ export function validateItemDraft(draft: ItemDraft): ItemDraftResult {
   return {
     ok: true,
     fields: {
-      date: draft.date,
+      date,
       title,
       memo: memo || null,
-      start_time: draft.start_time || null,
-      end_time: (draft.start_time && draft.end_time) || null,
+      startTime,
+      endTime,
       emoji: emoji || null,
     },
   };
@@ -118,9 +131,9 @@ export function itemPatch(base: ItemFields, next: ItemFields): ItemPatch {
   for (const key of SINGLE_FIELDS) {
     if (next[key] !== base[key]) Object.assign(patch, { [key]: next[key] });
   }
-  if (next.start_time !== base.start_time || next.end_time !== base.end_time) {
-    patch.start_time = next.start_time;
-    patch.end_time = next.end_time;
+  if (next.startTime !== base.startTime || next.endTime !== base.endTime) {
+    patch.startTime = next.startTime;
+    patch.endTime = next.endTime;
   }
   return patch;
 }

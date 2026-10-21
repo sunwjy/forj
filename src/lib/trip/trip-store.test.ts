@@ -4,6 +4,7 @@ import type { FetchTripResult } from "./fetch-trip";
 import type { SendOutcome } from "./send-change";
 import type { ItemSnapshot, TripSnapshot } from "./snapshot";
 import { createTripStore, STALL_AFTER_MS, type Rejection } from "./trip-store";
+import { isoDate } from "./test-values";
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -41,19 +42,19 @@ const flush = () => vi.advanceTimersByTimeAsync(0);
 function item(id: string, overrides: Partial<ItemSnapshot> = {}): ItemSnapshot {
   return {
     id,
-    date: "2026-11-20",
+    date: isoDate("2026-11-20"),
     title: id,
     memo: null,
-    start_time: null,
-    end_time: null,
+    startTime: null,
+    endTime: null,
     emoji: null,
-    created_at: "2026-10-17T00:00:00.000000Z",
+    createdAt: "2026-10-17T00:00:00.000000Z",
     ...overrides,
   };
 }
 
 function trip(items: ItemSnapshot[]): TripSnapshot {
-  return { title: "후쿠오카", start_date: "2026-11-20", end_date: "2026-11-22", items };
+  return { title: "후쿠오카", startDate: isoDate("2026-11-20"), endDate: isoDate("2026-11-22"), items };
 }
 
 function shownTitles(store: ReturnType<typeof createTripStore>): string[] {
@@ -210,7 +211,7 @@ describe("trip store", () => {
 
   it("reverts a rejected change, reports it, and moves on to the next one", async () => {
     const { store, sends, rejections } = await loaded([item("a")]);
-    const created = item("b", { date: "2026-11-30" });
+    const created = item("b", { date: isoDate("2026-11-30") });
     store.submit({ kind: "create_item", item: created });
     store.submit({ kind: "update_item", id: "a", patch: { title: "바뀜" } });
     expect(shownTitles(store)).toEqual(["바뀜", "b"]);
@@ -240,15 +241,15 @@ describe("trip store", () => {
   });
 
   it("restores the period and its items when a period change is rejected", async () => {
-    const { store, sends, rejections } = await loaded([item("a"), item("b", { date: "2026-11-22" })]);
-    const change: TripChange = { kind: "set_trip_dates", start_date: "2026-11-20", end_date: "2026-11-21", deleted_ids: ["b"] };
+    const { store, sends, rejections } = await loaded([item("a"), item("b", { date: isoDate("2026-11-22") })]);
+    const change: TripChange = { kind: "set_trip_dates", startDate: isoDate("2026-11-20"), endDate: isoDate("2026-11-21"), confirmedDeletedIds: ["b"] };
     store.submit(change);
-    expect(store.getState().trip).toMatchObject({ trip: { end_date: "2026-11-21" } });
+    expect(store.getState().trip).toMatchObject({ trip: { endDate: "2026-11-21" } });
     expect(shownTitles(store)).toEqual(["a"]);
 
     sends[0].answer.resolve({ kind: "rejected", code: "DELETION_MISMATCH" });
     await flush();
-    expect(store.getState().trip).toMatchObject({ trip: { end_date: "2026-11-22" } });
+    expect(store.getState().trip).toMatchObject({ trip: { endDate: "2026-11-22" } });
     expect(shownTitles(store)).toEqual(["a", "b"]);
     expect(rejections).toEqual([{ change, code: "DELETION_MISMATCH", item: undefined }]);
   });

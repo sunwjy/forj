@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useMemo, useState, useSyncExternalStore } from "react";
 import { getSupabase } from "@/lib/supabase";
+import type { ShareToken } from "./branded";
 import type { TripChange } from "./changes";
 import { fetchTrip } from "./fetch-trip";
 import { sendChange } from "./send-change";
@@ -27,7 +28,7 @@ export type UseTrip = {
   pendingCount: number;
 };
 
-function storeFor(token: string): TripStore {
+function storeFor(token: ShareToken): TripStore {
   return createTripStore({
     fetchSnapshot: () => fetchTrip(token),
     send: (change) => sendChange(getSupabase(), token, change),
@@ -38,7 +39,7 @@ function storeFor(token: string): TripStore {
  * Loads a trip by share token and keeps its local state (snapshot + queue).
  * While changes are pending, closing the tab asks for confirmation (spec 6.3).
  */
-export function useTrip(token: string): UseTrip {
+export function useTrip(token: ShareToken): UseTrip {
   const [store, setStore] = useState(() => ({ token, store: storeFor(token) }));
   if (store.token !== token) setStore({ token, store: storeFor(token) });
   const current = store.store;

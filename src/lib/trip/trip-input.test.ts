@@ -37,6 +37,10 @@ describe("validateTripInput", () => {
     expect(validateTripInput({ ...valid, endDate: "" })).toMatchObject({ field: "period" });
   });
 
+  it("rejects a date that does not exist", () => {
+    expect(validateTripInput({ ...valid, startDate: "2026-02-30" })).toMatchObject({ ok: false, field: "period" });
+  });
+
   it("allows a one-day trip and a past trip", () => {
     expect(validateTripInput({ ...valid, startDate: "2026-11-20", endDate: "2026-11-20" }).ok).toBe(true);
     expect(validateTripInput({ ...valid, startDate: "2001-01-01", endDate: "2001-01-02" }).ok).toBe(true);

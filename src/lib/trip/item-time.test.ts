@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { addMinutes, durationMinutes, overlappingItems } from "./item-time";
+import type { ItemSnapshot } from "./snapshot";
+import { hhMm, isoDate } from "./test-values";
 
-type Slot = { id: string; date: string; start_time: string | null; end_time: string | null };
+type Slot = Pick<ItemSnapshot, "id" | "date" | "startTime" | "endTime">;
 
-function slot(id: string, start_time: string | null, end_time: string | null, date = "2026-11-20"): Slot {
-  return { id, date, start_time, end_time };
+function slot(id: string, startTime: string | null, endTime: string | null, date = "2026-11-20"): Slot {
+  return { id, date: isoDate(date), startTime: startTime === null ? null : hhMm(startTime), endTime: endTime === null ? null : hhMm(endTime) };
 }
 
 describe("overlappingItems", () => {
@@ -44,15 +46,15 @@ describe("overlappingItems", () => {
 
 describe("durationMinutes", () => {
   it("measures from start to end, crossing midnight when the end is not later", () => {
-    expect(durationMinutes("09:00", "10:30")).toBe(90);
-    expect(durationMinutes("20:00", "01:00")).toBe(300);
-    expect(durationMinutes("09:00", "09:00")).toBe(24 * 60);
+    expect(durationMinutes(hhMm("09:00"), hhMm("10:30"))).toBe(90);
+    expect(durationMinutes(hhMm("20:00"), hhMm("01:00"))).toBe(300);
+    expect(durationMinutes(hhMm("09:00"), hhMm("09:00"))).toBe(24 * 60);
   });
 });
 
 describe("addMinutes", () => {
   it("wraps past midnight", () => {
-    expect(addMinutes("09:00", 90)).toBe("10:30");
-    expect(addMinutes("23:30", 60)).toBe("00:30");
+    expect(addMinutes(hhMm("09:00"), 90)).toBe("10:30");
+    expect(addMinutes(hhMm("23:30"), 60)).toBe("00:30");
   });
 });

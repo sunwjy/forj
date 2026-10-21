@@ -1,10 +1,11 @@
+import { parseIsoDate, parseShareToken, type ShareToken } from "./branded";
 import type { Period } from "./trip-input";
-import type { TripState } from "./trip/trip-store";
+import type { TripState } from "./trip-store";
 
 /** The slice of `localStorage` recent trips need. */
 export type RecentTripsStorage = Pick<Storage, "getItem" | "setItem">;
 
-export type RecentTripInput = { token: string; title: string } & Period;
+export type RecentTripInput = { token: ShareToken; title: string } & Period;
 
 /** A trip in this browser's recent trips (spec 7.2): a snapshot plus when it was last opened. */
 export type RecentTrip = RecentTripInput & {
@@ -17,14 +18,18 @@ export type RecentTrips = ReturnType<typeof createRecentTrips>;
 export const RECENT_TRIPS_KEY = "forj.recentTrips";
 export const MAX_RECENT_TRIPS = 50;
 
+/** Storage may hold anything (an older version, a hand edit), so each field is checked as it is read. */
 function isRecentTrip(value: unknown): value is RecentTrip {
   if (typeof value !== "object" || value === null) return false;
   const entry = value as Record<string, unknown>;
   return (
     typeof entry.token === "string" &&
+    parseShareToken(entry.token) !== null &&
     typeof entry.title === "string" &&
     typeof entry.startDate === "string" &&
+    parseIsoDate(entry.startDate) !== null &&
     typeof entry.endDate === "string" &&
+    parseIsoDate(entry.endDate) !== null &&
     typeof entry.openedAt === "number"
   );
 }
@@ -89,7 +94,7 @@ export function createRecentTrips(storage: RecentTripsStorage | null, now: () =>
       write([{ ...trip, openedAt: now() }, ...others]);
     },
     /** Removes a trip from the list (the trip itself stays) and returns it for 「되돌리기」. */
-    forget(token: string): RecentTrip | undefined {
+    forget(token: ShareToken): RecentTrip | undefined {
       const current = read();
       const forgotten = current.find((entry) => entry.token === token);
       if (forgotten) write(current.filter((entry) => entry !== forgotten));
@@ -116,9 +121,9 @@ export function createRecentTrips(storage: RecentTripsStorage | null, now: () =>
  * trip is remembered as opened now, `TRIP_NOT_FOUND` drops it, and a network
  * error leaves it alone because the trip may still exist.
  */
-export function recordTripLookup(recent: RecentTrips, token: string, state: TripState) {
+export function recordTripLookup(recent: RecentTrips, token: ShareToken, state: TripState) {
   if (state.status === "found") {
-    const { title, start_date: startDate, end_date: endDate } = state.trip;
+    const { title, startDate, endDate } = state.trip;
     recent.remember({ token, title, startDate, endDate });
   } else if (state.status === "not_found") {
     recent.forget(token);
@@ -135,5 +140,6 @@ const TRIP_PATH = /^\/t\/([^/]+)\/?$/;
  */
 export function forgetTripAtPath(recent: RecentTrips, pathname: string) {
   const match = TRIP_PATH.exec(pathname);
-  if (match) recent.forget(match[1]);
+  const token = match && parseShareToken(match[1]);
+  if (token) recent.forget(token);
 }

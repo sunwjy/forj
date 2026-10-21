@@ -1,6 +1,6 @@
 "use client";
 
-import { BottomSheet } from "./BottomSheet";
+import { BottomSheet } from "@/components/BottomSheet";
 import { TripCreateForm, type CreatedTrip } from "./TripCreateForm";
 
 type TripCreateSheetProps = {

@@ -2,8 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { forgetTripAtPath } from "@/lib/recent-trips";
-import { getRecentTrips } from "@/lib/use-recent-trips";
+import { forgetTripAtPath } from "@/lib/trip/recent-trips";
+import { getRecentTrips } from "@/lib/trip/use-recent-trips";
 
 /**
  * Drops the trip in the URL from recent trips. The not-found page renders it

@@ -1,9 +1,10 @@
+import { parseHhMm, type HhMm, type IsoDate } from "./branded";
 import { daysBetween } from "./days";
 import type { ItemSnapshot } from "./snapshot";
 
 const DAY_MINUTES = 24 * 60;
 
-function minutesOf(time: string): number {
+function minutesOf(time: HhMm): number {
   return Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 }
 
@@ -11,25 +12,26 @@ function minutesOf(time: string): number {
  * Minutes from start to end. An end at or before the start is the next day,
  * so the result is 1 to 1440 (spec 2.3).
  */
-export function durationMinutes(start: string, end: string): number {
+export function durationMinutes(start: HhMm, end: HhMm): number {
   const diff = minutesOf(end) - minutesOf(start);
   return diff > 0 ? diff : diff + DAY_MINUTES;
 }
 
-/** `HH:MM` plus `minutes`, wrapping past midnight. */
-export function addMinutes(time: string, minutes: number): string {
+/** `time` plus `minutes`, wrapping past midnight. */
+export function addMinutes(time: HhMm, minutes: number): HhMm {
   const total = (((minutesOf(time) + minutes) % DAY_MINUTES) + DAY_MINUTES) % DAY_MINUTES;
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
+  // `total` is 0 to 1439, so this never gives null.
+  return parseHhMm(`${pad(Math.floor(total / 60))}:${pad(total % 60)}`)!;
 }
 
-type Slot = Pick<ItemSnapshot, "id" | "date" | "start_time" | "end_time">;
+type Slot = Pick<ItemSnapshot, "id" | "date" | "startTime" | "endTime">;
 
 /** [start, end) in minutes from a fixed date, or undefined without both times. */
-function span(item: Slot, origin: string): [number, number] | undefined {
-  if (item.start_time === null || item.end_time === null) return undefined;
-  const start = daysBetween(origin, item.date) * DAY_MINUTES + minutesOf(item.start_time);
-  return [start, start + durationMinutes(item.start_time, item.end_time)];
+function span(item: Slot, origin: IsoDate): [number, number] | undefined {
+  if (item.startTime === null || item.endTime === null) return undefined;
+  const start = daysBetween(origin, item.date) * DAY_MINUTES + minutesOf(item.startTime);
+  return [start, start + durationMinutes(item.startTime, item.endTime)];
 }
 
 /**

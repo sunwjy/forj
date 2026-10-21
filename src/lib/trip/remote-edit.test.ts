@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 import type { ItemFields } from "./changes";
 import { draftFromItem, itemPatch, validateItemDraft } from "./item-draft";
 import { mergeRemoteFields, mergeRemoteItem } from "./remote-edit";
+import { hhMm, isoDate } from "./test-values";
 
 const opened: ItemFields = {
-  date: "2026-11-20",
+  date: isoDate("2026-11-20"),
   title: "라멘",
   memo: null,
-  start_time: "12:00",
-  end_time: "13:00",
+  startTime: hhMm("12:00"),
+  endTime: hhMm("13:00"),
   emoji: "🍜",
 };
 
@@ -42,10 +43,10 @@ describe("mergeRemoteItem", () => {
   });
 
   it("handles each time separately and clearing a field", () => {
-    const latest = { ...opened, end_time: null, emoji: null };
+    const latest = { ...opened, endTime: null, emoji: null };
     const merged = mergeRemoteItem(opened, draftFromItem(opened), latest);
-    expect(merged.draft).toMatchObject({ start_time: "12:00", end_time: "", emoji: "" });
-    expect(merged.marks).toEqual({ end_time: "theirs", emoji: "theirs" });
+    expect(merged.draft).toMatchObject({ startTime: "12:00", endTime: "", emoji: "" });
+    expect(merged.marks).toEqual({ endTime: "theirs", emoji: "theirs" });
   });
 
   it("afterwards saves only my edits, not the values I took from someone else", () => {

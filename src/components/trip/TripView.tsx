@@ -6,10 +6,11 @@ import { ArrowLeft, LinkIcon, Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { showToast } from "@/components/toast";
+import type { IsoDate } from "@/lib/trip/branded";
 import { changedItemId, optimisticCreatedAt } from "@/lib/trip/changes";
 import { type Day, ddayLabel, initialDay, tripDays } from "@/lib/trip/days";
 import { dayChipDate, periodLabel, timeLabel } from "@/lib/trip/format";
-import { blankDraft, draftFromItem, itemFields, type ItemDraft } from "@/lib/trip/item-draft";
+import { blankDraft, draftFromItem, itemFields, OUT_OF_RANGE_MESSAGE, type ItemDraft } from "@/lib/trip/item-draft";
 import { copyShareLink } from "@/lib/trip/share-link";
 import type { ItemSnapshot, TripSnapshot } from "@/lib/trip/snapshot";
 import { dayTimeline } from "@/lib/trip/timeline";
@@ -30,23 +31,28 @@ type TripViewProps = {
   /** The rebased view: server snapshot plus pending changes. */
   trip: TripSnapshot;
   /** `YYYY-MM-DD` in the viewer's local calendar. */
-  today: string;
+  today: IsoDate;
   writer: TripWriter;
   /** The realtime channel is down or changes have failed to send for a while (spec 6.3, 7.7). */
   offline?: boolean;
 };
 
-const OUT_OF_RANGE_TOAST = "여행 기간에서 빠진 날짜예요";
 const DELETED_TOAST = "삭제된 일정이라 저장하지 못했어요";
 const FAILED_TOAST = "저장하지 못했어요";
 
 /** The trip screen body (spec 7.3): top bar, header, day chips, timeline, item sheet. */
 export function TripView({ trip, today, writer, offline = false }: TripViewProps) {
-  const days = tripDays(trip.start_date, trip.end_date);
-  const [picked, setPicked] = useState(() => initialDay(trip.start_date, trip.end_date, today));
+  const days = tripDays(trip.startDate, trip.endDate);
+  const [picked, setPicked] = useState(() => initialDay(trip.startDate, trip.endDate, today));
   // The period can change under us (later, by someone else); fall back if the day left it.
   const selected = days.find((d) => d.date === picked) ?? days[0];
   const { timed, untimed } = dayTimeline(trip.items, selected.date);
+
+  /** Selects the day chip whose value is `value`, one of the trip's dates. */
+  function pickDay(value: string) {
+    const day = days.find((d) => d.date === value);
+    if (day) setPicked(day.date);
+  }
 
   const [sheet, setSheet] = useState<ItemSheetTarget | null>(null);
   const sheetKey = useRef(0);
@@ -79,7 +85,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
     if (code === "ITEM_NOT_FOUND") {
       showToast(DELETED_TOAST, draft && { label: "새 일정으로 추가", onClick: () => openNew(draft) });
     } else if (code === "DATE_OUT_OF_RANGE") {
-      showToast(OUT_OF_RANGE_TOAST, current || draft ? { label: "다시 편집", onClick: editAgain } : undefined);
+      showToast(OUT_OF_RANGE_MESSAGE, current || draft ? { label: "다시 편집", onClick: editAgain } : undefined);
     } else {
       showToast(FAILED_TOAST, current && { label: "다시 편집", onClick: editAgain });
     }
@@ -95,7 +101,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
           {offline ? (
             <OfflineBadge />
           ) : (
-            <span className={styles.dday}>{ddayLabel(trip.start_date, trip.end_date, today)}</span>
+            <span className={styles.dday}>{ddayLabel(trip.startDate, trip.endDate, today)}</span>
           )}
         </div>
         <Button
@@ -118,11 +124,11 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
             <Pencil size={18} strokeWidth={2.25} />
           </Button>
         </h1>
-        <p className={`${styles.period} num`}>{periodLabel(trip.start_date, trip.end_date)}</p>
+        <p className={`${styles.period} num`}>{periodLabel(trip.startDate, trip.endDate)}</p>
       </header>
 
       {/* Day chips are tabs: arrow keys move between days, Enter or Space shows one. */}
-      <Tabs.Root value={selected.date} onValueChange={(date: string) => setPicked(date)}>
+      <Tabs.Root value={selected.date} onValueChange={(value: string) => pickDay(value)}>
         <Tabs.List className={styles.chips} aria-label="일차">
           {days.map((day) => (
             <Tabs.Tab key={day.date} value={day.date} className={`${styles.chip} ${dayClass(day)}`}>
@@ -175,7 +181,7 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
         onCreate={(fields) => {
           writer.submit({
             kind: "create_item",
-            item: { ...fields, id: crypto.randomUUID(), created_at: optimisticCreatedAt(new Date()) },
+            item: { ...fields, id: crypto.randomUUID(), createdAt: optimisticCreatedAt(new Date()) },
           });
           setPicked(fields.date);
         }}
@@ -195,10 +201,10 @@ export function TripView({ trip, today, writer, offline = false }: TripViewProps
 type RowProps = { item: ItemSnapshot; order: number; onOpen: () => void };
 
 function TimelineRow({ item, order, onOpen }: RowProps) {
-  const untimed = item.start_time === null;
+  const untimed = item.startTime === null;
   return (
     <li className={styles.row}>
-      <div className={`${styles.time} num`}>{item.start_time}</div>
+      <div className={`${styles.time} num`}>{item.startTime}</div>
       <div className={styles.rail}>
         <span className={untimed ? `${styles.dot} ${styles.dotHollow}` : styles.dot} />
       </div>
