@@ -1,8 +1,15 @@
 "use client";
 
 import { Drawer } from "@base-ui/react/drawer";
-import type { ReactNode } from "react";
+import type { FocusEvent, ReactNode } from "react";
+import { moveCollapsedCaretToEnd } from "@/lib/caret";
 import styles from "./BottomSheet.module.css";
+
+/** Keeps a tapped, filled field's caret off its start; see `moveCollapsedCaretToEnd`. */
+function handleFocus(event: FocusEvent<HTMLDivElement>) {
+  const target = event.target;
+  if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) moveCollapsedCaretToEnd(target);
+}
 
 type BottomSheetProps = {
   open: boolean;
@@ -33,7 +40,9 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
                 <div className={styles.grip} aria-hidden />
                 <Drawer.Title className={styles.title}>{title}</Drawer.Title>
               </div>
-              <Drawer.Content className={styles.body}>{children}</Drawer.Content>
+              <Drawer.Content className={styles.body} onFocus={handleFocus}>
+                {children}
+              </Drawer.Content>
             </Drawer.Popup>
           </Drawer.Viewport>
         </Drawer.Portal>
